@@ -48,7 +48,7 @@ Extraia TODOS os imóveis do edital. Não resuma, não pule nenhum. Inclua todas
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 8000,
         messages: [{ role: 'user', content: [
           { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
