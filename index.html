@@ -4,256 +4,186 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leilões PE — Painel</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-:root {
-  --bg: #F7F6F2;
-  --surface: #FFFFFF;
-  --surface2: #F0EEE9;
-  --border: rgba(0,0,0,0.08);
-  --border2: rgba(0,0,0,0.14);
-  --text: #1A1917;
-  --text2: #6B6860;
-  --text3: #A09E99;
-  --green: #1D9E75;
-  --green-bg: #E1F5EE;
-  --green-text: #085041;
-  --amber: #BA7517;
-  --amber-bg: #FAEEDA;
-  --amber-text: #633806;
-  --red: #E24B4A;
-  --red-bg: #FCEBEB;
-  --red-text: #791F1F;
-  --blue: #378ADD;
-  --blue-bg: #E6F1FB;
-  --blue-text: #0C447C;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --font: 'DM Sans', sans-serif;
-  --mono: 'DM Mono', monospace;
-}
-[data-theme="dark"] {
-  --bg: #141412;
-  --surface: #1E1D1B;
-  --surface2: #252422;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --text: #F0EEE9;
-  --text2: #9A9890;
-  --text3: #5A5856;
-  --green-bg: #04342C;
-  --green-text: #9FE1CB;
-  --amber-bg: #412402;
-  --amber-text: #FAC775;
-  --red-bg: #501313;
-  --red-text: #F7C1C1;
-  --blue-bg: #042C53;
-  --blue-text: #B5D4F4;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
-
-/* Layout */
-.app { display: flex; min-height: 100vh; }
-.sidebar { width: 220px; background: var(--surface); border-right: 0.5px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 4px; position: fixed; height: 100vh; overflow-y: auto; z-index: 10; }
-.main { margin-left: 220px; flex: 1; padding: 2rem; max-width: 1200px; }
-.logo { font-size: 15px; font-weight: 500; padding: 0 0.5rem 1.25rem; border-bottom: 0.5px solid var(--border); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px; }
-.logo-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; }
-.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: var(--radius); font-size: 13px; color: var(--text2); cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: all 0.15s; }
-.nav-item:hover { background: var(--surface2); color: var(--text); }
-.nav-item.active { background: var(--surface2); color: var(--text); font-weight: 500; }
-.nav-item i { font-size: 16px; }
-.nav-section { font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; padding: 1rem 0.5rem 0.4rem; }
-.sidebar-bottom { margin-top: auto; padding-top: 1rem; border-top: 0.5px solid var(--border); }
-
-/* Topbar */
-.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 12px; }
-.page-title { font-size: 20px; font-weight: 500; }
-.page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); font-size: 13px; cursor: pointer; font-family: var(--font); transition: all 0.15s; }
-.btn:hover { background: var(--surface2); }
-.btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
-.btn.primary:hover { opacity: 0.85; }
-.btn.danger { color: var(--red); border-color: var(--red-bg); }
-.btn.danger:hover { background: var(--red-bg); }
-
-/* Metrics */
-.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.75rem; }
-.metric { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; }
-.metric-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; }
-.metric-value { font-size: 22px; font-weight: 500; }
-.metric-value.green { color: var(--green); }
-.metric-value.amber { color: var(--amber); }
-.metric-value.red { color: var(--red); }
-
-/* Tabs */
-.tab-bar { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); margin-bottom: 1.25rem; }
-.tab { padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--font); transition: all 0.15s; }
-.tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
-
-/* Filters & Search */
-.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
-.filter-btn { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; font-family: var(--font); transition: all 0.15s; }
-.filter-btn.on { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue); }
-.search-input { flex: 1; min-width: 200px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--surface); color: var(--text); font-family: var(--font); font-size: 13px; padding: 7px 12px; }
-.search-input:focus { outline: none; border-color: var(--blue); }
-.count-label { font-size: 12px; color: var(--text3); margin-left: auto; }
-
-/* Cards grid */
-.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-.icard { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; transition: border-color 0.15s; cursor: pointer; }
-.icard:hover { border-color: var(--border2); }
-.icard.urgente { border-left: 3px solid var(--red); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
-.icard.hoje { border-left: 3px solid var(--amber); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
-.icard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
-.icard-title { font-size: 13px; font-weight: 500; flex: 1; line-height: 1.4; }
-.icard-addr { font-size: 11px; color: var(--text2); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
-.icard-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
-.icard-key { color: var(--text2); }
-.icard-val { font-weight: 500; }
-.icard-val.green { color: var(--green); }
-.icard-actions { display: flex; gap: 6px; margin-top: 10px; border-top: 0.5px solid var(--border); padding-top: 10px; }
-.icard-btn { flex: 1; font-size: 11px; padding: 6px; border-radius: 7px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.15s; }
-.icard-btn:hover { background: var(--surface2); color: var(--text); }
-.icard-btn.danger:hover { background: var(--red-bg); color: var(--red-text); }
-.sessions-mini { margin-top: 8px; border-top: 0.5px solid var(--border); padding-top: 8px; }
-.sess-row { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 3px; }
-.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.dot-future { background: var(--green); }
-.dot-today { background: var(--amber); }
-.dot-past { background: var(--border2); }
-
-/* Badge */
-.badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
-.badge-ativo { background: var(--green-bg); color: var(--green-text); }
-.badge-urgente { background: var(--red-bg); color: var(--red-text); }
-.badge-hoje { background: var(--amber-bg); color: var(--amber-text); }
-.badge-encerrado { background: var(--surface2); color: var(--text3); }
-.badge-arrematado { background: var(--blue-bg); color: var(--blue-text); }
-
-/* Warning box */
-.warn { background: var(--amber-bg); border-radius: var(--radius); padding: 6px 10px; font-size: 11px; color: var(--amber-text); margin-top: 8px; }
-
-/* Cronograma */
-.cron-month { margin-bottom: 1.25rem; }
-.cron-month-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-.cron-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; }
-.cron-item:hover .cron-title { color: var(--blue); }
-.cron-date { min-width: 44px; text-align: center; background: var(--surface2); border-radius: var(--radius); padding: 5px 4px; }
-.cron-day { font-size: 20px; font-weight: 500; line-height: 1; }
-.cron-dow { font-size: 10px; color: var(--text3); }
-.cron-title { font-size: 13px; font-weight: 500; }
-.cron-sub { font-size: 12px; color: var(--text2); }
-.cron-price { font-size: 12px; color: var(--green); font-weight: 500; }
-
-/* ROI Calculator */
-.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-.calc-section { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem; }
-.calc-section-title { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-.form-group { margin-bottom: 10px; }
-.form-label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; }
-.form-input { width: 100%; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--surface); color: var(--text); font-family: var(--font); font-size: 13px; padding: 7px 10px; }
-.form-input:focus { outline: none; border-color: var(--blue); }
-select.form-input { cursor: pointer; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.slider-wrap { display: flex; align-items: center; gap: 10px; }
-.slider-wrap input[type=range] { flex: 1; accent-color: var(--green); }
-.slider-val { font-size: 13px; font-weight: 500; min-width: 40px; text-align: right; }
-.result-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem; margin-top: 1.25rem; }
-.verdict { border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
-.verdict i { font-size: 20px; }
-.verdict-title { font-size: 14px; font-weight: 500; }
-.verdict-sub { font-size: 12px; margin-top: 2px; }
-.breakdown-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 0.5px solid var(--border); }
-.breakdown-row:last-child { border-bottom: none; font-weight: 500; font-size: 14px; }
-.neg { color: var(--red); }
-.pos { color: var(--green); }
-.roi-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-.roi-m { background: var(--surface2); border-radius: var(--radius); padding: 8px 10px; }
-.roi-m-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
-.roi-m-val { font-size: 18px; font-weight: 500; }
-
-/* Modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
-.modal-overlay.open { display: flex; }
-.modal { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1.5rem; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; position: relative; }
-.modal-title { font-size: 16px; font-weight: 500; margin-bottom: 1.25rem; }
-.modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; }
-.sessions-editor .sess-edit-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
-.add-sess-btn { font-size: 12px; color: var(--blue); background: none; border: none; cursor: pointer; font-family: var(--font); padding: 4px 0; display: flex; align-items: center; gap: 4px; }
-
-/* Upload area */
-.upload-area { border: 1px dashed var(--border2); border-radius: var(--radius-lg); padding: 1.75rem; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--surface2); }
-.upload-area:hover { border-color: var(--blue); background: var(--blue-bg); }
-.upload-icon { font-size: 28px; color: var(--text3); margin-bottom: 6px; }
-.upload-text { font-size: 13px; color: var(--text2); }
-.upload-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.ai-status { background: var(--blue-bg); border-radius: var(--radius); padding: 10px 12px; font-size: 13px; color: var(--blue-text); display: flex; gap: 8px; align-items: flex-start; margin-bottom: 12px; }
-
-/* Detail modal */
-.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.detail-item { background: var(--surface2); border-radius: var(--radius); padding: 8px 10px; }
-.detail-key { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
-.detail-val { font-size: 13px; font-weight: 500; }
-.timeline-item { display: flex; gap: 10px; padding-bottom: 14px; position: relative; }
-.timeline-item:not(:last-child)::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 1px; background: var(--border); }
-.tl-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
-.tl-dot.future { background: var(--green-bg); color: var(--green-text); }
-.tl-dot.today { background: var(--amber-bg); color: var(--amber-text); }
-.tl-dot.past { background: var(--surface2); color: var(--text3); }
-.tl-label { font-size: 13px; font-weight: 500; }
-.tl-date { font-size: 12px; color: var(--text2); }
-.custo-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 0.5px solid var(--border); }
-.custo-row:last-child { border-bottom: none; font-weight: 500; }
-.ai-analysis { background: var(--surface2); border-radius: var(--radius); padding: 12px; font-size: 12px; line-height: 1.7; white-space: pre-wrap; color: var(--text2); }
-
-/* Toast */
-.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: var(--radius); font-size: 13px; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
-.toast.show { opacity: 1; }
-
-/* Loading */
-.loading { text-align: center; padding: 3rem; color: var(--text2); }
-.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -4px; margin-right: 8px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Empty state */
-.empty { text-align: center; padding: 3rem 1rem; }
-.empty i { font-size: 36px; color: var(--text3); display: block; margin-bottom: 10px; }
-.empty-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
-.empty-sub { font-size: 13px; color: var(--text2); }
-
-/* Connection status */
-.conn-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
-.conn-badge.online { background: var(--green-bg); color: var(--green-text); }
-.conn-badge.offline { background: var(--red-bg); color: var(--red-text); }
-.conn-badge.connecting { background: var(--amber-bg); color: var(--amber-text); }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .main { margin-left: 0; padding: 1rem; }
-  .calc-grid { grid-template-columns: 1fr; }
-  .roi-metrics { grid-template-columns: 1fr 1fr; }
-}
+:root{--bg:#F7F6F2;--sur:#FFF;--sur2:#F0EEE9;--brd:rgba(0,0,0,0.08);--brd2:rgba(0,0,0,0.14);--tx:#1A1917;--tx2:#6B6860;--tx3:#A09E99;--grn:#1D9E75;--grn-bg:#E1F5EE;--grn-tx:#085041;--amb:#BA7517;--amb-bg:#FAEEDA;--amb-tx:#633806;--red:#E24B4A;--red-bg:#FCEBEB;--red-tx:#791F1F;--blu:#378ADD;--blu-bg:#E6F1FB;--blu-tx:#0C447C;--r:10px;--rl:14px;--f:'DM Sans',sans-serif;}
+[data-theme=dark]{--bg:#141412;--sur:#1E1D1B;--sur2:#252422;--brd:rgba(255,255,255,0.08);--brd2:rgba(255,255,255,0.14);--tx:#F0EEE9;--tx2:#9A9890;--tx3:#5A5856;--grn-bg:#04342C;--grn-tx:#9FE1CB;--amb-bg:#412402;--amb-tx:#FAC775;--red-bg:#501313;--red-tx:#F7C1C1;--blu-bg:#042C53;--blu-tx:#B5D4F4;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--f);background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--sur);border-right:0.5px solid var(--brd);padding:1.25rem .9rem;display:flex;flex-direction:column;gap:3px;position:fixed;height:100vh;overflow-y:auto;z-index:10;}
+.main{margin-left:220px;flex:1;padding:1.75rem 2rem;max-width:1300px;}
+.logo{font-size:15px;font-weight:500;padding:0 .5rem 1rem;border-bottom:0.5px solid var(--brd);margin-bottom:.5rem;display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;background:var(--grn);border-radius:50%;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);font-size:13px;color:var(--tx2);cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:var(--f);transition:all .15s;}
+.nav-item:hover{background:var(--sur2);color:var(--tx);}
+.nav-item.on{background:var(--sur2);color:var(--tx);font-weight:500;}
+.nav-item i{font-size:16px;}
+.nav-sec{font-size:10px;font-weight:500;color:var(--tx3);letter-spacing:.07em;text-transform:uppercase;padding:.9rem .5rem .3rem;}
+.sidebar-bot{margin-top:auto;padding-top:.9rem;border-top:0.5px solid var(--brd);display:flex;flex-direction:column;gap:3px;}
+.conn{font-size:11px;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;margin-bottom:4px;}
+.conn.ok{background:var(--grn-bg);color:var(--grn-tx);}
+.conn.err{background:var(--red-bg);color:var(--red-tx);}
+.conn.wait{background:var(--amb-bg);color:var(--amb-tx);}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px;}
+.page-title{font-size:20px;font-weight:500;}
+.page-sub{font-size:13px;color:var(--tx2);margin-top:2px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--r);border:0.5px solid var(--brd2);background:var(--sur);color:var(--tx);font-size:13px;cursor:pointer;font-family:var(--f);transition:all .15s;}
+.btn:hover{background:var(--sur2);}
+.btn.pri{background:var(--tx);color:var(--bg);border-color:var(--tx);}
+.btn.pri:hover{opacity:.85;}
+.btn.grn{background:var(--grn);color:#fff;border-color:var(--grn);}
+.btn.grn:hover{opacity:.85;}
+.btn.red{color:var(--red);border-color:var(--red-bg);}
+.btn.red:hover{background:var(--red-bg);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.mets{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.5rem;}
+.met{background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--rl);padding:.9rem 1rem;}
+.met-l{font-size:11px;color:var(--tx2);margin-bottom:4px;}
+.met-v{font-size:22px;font-weight:500;}
+.met-v.g{color:var(--grn);}
+.met-v.r{color:var(--red);}
+.met-v.a{color:var(--amb);}
+.tabs{display:flex;border-bottom:0.5px solid var(--brd);margin-bottom:1.1rem;}
+.tab{padding:8px 15px;font-size:13px;cursor:pointer;color:var(--tx2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--f);}
+.tab.on{color:var(--tx);border-bottom-color:var(--tx);font-weight:500;}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+.fbtn{font-size:12px;padding:4px 12px;border-radius:20px;border:0.5px solid var(--brd2);background:var(--sur);color:var(--tx2);cursor:pointer;font-family:var(--f);}
+.fbtn.on{background:var(--blu-bg);color:var(--blu-tx);border-color:var(--blu);}
+.srch{flex:1;min-width:180px;font-family:var(--f);font-size:13px;border:0.5px solid var(--brd2);border-radius:var(--r);background:var(--sur);color:var(--tx);padding:6px 10px;}
+.clbl{font-size:12px;color:var(--tx3);margin-left:auto;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:12px;}
+.card{background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--rl);padding:.9rem 1rem;cursor:pointer;transition:border-color .15s;position:relative;}
+.card:hover{border-color:var(--brd2);}
+.card.urg{border-left:3px solid var(--red);border-radius:0 var(--rl) var(--rl) 0;}
+.card.hoj{border-left:3px solid var(--amb);border-radius:0 var(--rl) var(--rl) 0;}
+.card.fav{border-top:2px solid #F4C700;}
+.ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:7px;}
+.ctitle{font-size:13px;font-weight:500;flex:1;line-height:1.4;}
+.caddr{font-size:11px;color:var(--tx2);margin-bottom:8px;}
+.crow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+.ck{color:var(--tx2);}
+.cv{font-weight:500;}
+.cv.g{color:var(--grn);}
+.cv.r{color:var(--red);}
+.smini{margin-top:8px;border-top:0.5px solid var(--brd);padding-top:7px;}
+.srow{display:flex;align-items:center;gap:5px;font-size:11px;margin-bottom:3px;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dot-f{background:var(--grn);}
+.dot-t{background:var(--amb);}
+.dot-p{background:var(--brd2);}
+.cact{display:flex;gap:5px;margin-top:9px;border-top:0.5px solid var(--brd);padding-top:8px;}
+.cbtn{flex:1;font-size:11px;padding:5px;border-radius:7px;border:0.5px solid var(--brd2);background:transparent;color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;font-family:var(--f);}
+.cbtn:hover{background:var(--sur2);}
+.cbtn.fav-btn{color:#F4C700;border-color:#F4C700;}
+.cbtn.fav-btn.active{background:#FFF8CC;}
+.cbtn.danger:hover{background:var(--red-bg);color:var(--red-tx);}
+.alarm-badge{position:absolute;top:10px;right:10px;background:var(--red-bg);color:var(--red-tx);font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;}
+.badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.b-a{background:var(--grn-bg);color:var(--grn-tx);}
+.b-u{background:var(--red-bg);color:var(--red-tx);}
+.b-h{background:var(--amb-bg);color:var(--amb-tx);}
+.b-e{background:var(--sur2);color:var(--tx3);}
+.b-arr{background:var(--blu-bg);color:var(--blu-tx);}
+.warn{background:var(--amb-bg);border-radius:var(--r);padding:5px 9px;font-size:11px;color:var(--amb-tx);margin-top:7px;}
+.empty{text-align:center;padding:2.5rem 1rem;grid-column:1/-1;}
+.empty i{font-size:32px;color:var(--tx3);display:block;margin-bottom:8px;}
+.empty-t{font-size:15px;font-weight:500;margin-bottom:5px;}
+.empty-s{font-size:13px;color:var(--tx2);}
+.cron-m{margin-bottom:1rem;}
+.cron-ml{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;}
+.cron-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--brd);cursor:pointer;}
+.cron-d{min-width:44px;text-align:center;background:var(--sur2);border-radius:var(--r);padding:5px 4px;}
+.cron-day{font-size:19px;font-weight:500;line-height:1;}
+.cron-dow{font-size:10px;color:var(--tx3);}
+.cron-t{font-size:13px;font-weight:500;}
+.cron-s{font-size:12px;color:var(--tx2);}
+.cron-p{font-size:12px;color:var(--grn);font-weight:500;}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
+.modal-wrap.open{display:flex;}
+.modal{background:var(--sur);border:0.5px solid var(--brd2);border-radius:var(--rl);padding:1.5rem;width:100%;max-width:560px;position:relative;margin:auto;}
+.modal.wide{max-width:720px;}
+.modal-t{font-size:16px;font-weight:500;margin-bottom:1.25rem;}
+.mcls{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--tx3);font-size:18px;}
+.fg{margin-bottom:10px;}
+.fl{font-size:12px;color:var(--tx2);display:block;margin-bottom:3px;}
+.fi{width:100%;border:0.5px solid var(--brd2);border-radius:var(--r);background:var(--sur);color:var(--tx);font-family:var(--f);font-size:13px;padding:7px 10px;}
+.fi:focus{outline:none;border-color:var(--blu);}
+textarea.fi{min-height:70px;resize:vertical;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sess-ed .sr{display:flex;gap:6px;align-items:center;margin-bottom:5px;}
+.add-s{font-size:12px;color:var(--blu);background:none;border:none;cursor:pointer;font-family:var(--f);padding:3px 0;}
+.save-btn{width:100%;padding:10px;border-radius:var(--r);background:var(--tx);color:var(--bg);border:none;cursor:pointer;font-size:14px;font-weight:500;font-family:var(--f);margin-top:6px;}
+.save-btn:hover{opacity:.85;}
+.save-btn:disabled{opacity:.4;cursor:not-allowed;}
+.det-g{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}
+.di{background:var(--sur2);border-radius:var(--r);padding:7px 10px;}
+.dk{font-size:11px;color:var(--tx3);margin-bottom:2px;}
+.dv{font-size:13px;font-weight:500;}
+.tl-i{display:flex;gap:9px;padding-bottom:13px;position:relative;}
+.tl-i:not(:last-child)::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:1px;background:var(--brd);}
+.tl-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.tl-dot.f{background:var(--grn-bg);color:var(--grn-tx);}
+.tl-dot.t{background:var(--amb-bg);color:var(--amb-tx);}
+.tl-dot.p{background:var(--sur2);color:var(--tx3);}
+.tl-l{font-size:13px;font-weight:500;}
+.tl-d{font-size:12px;color:var(--tx2);}
+.cr{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--brd);}
+.cr:last-child{border-bottom:none;font-weight:500;}
+.ai-box{background:var(--sur2);border-radius:var(--r);padding:10px;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--tx2);max-height:200px;overflow-y:auto;}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 18px;border-radius:var(--r);font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.roi-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.roi-sec{background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--rl);padding:.9rem 1rem;margin-bottom:10px;}
+.roi-t{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.roi-mets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
+.roi-m{background:var(--sur2);border-radius:var(--r);padding:7px 9px;}
+.roi-ml{font-size:11px;color:var(--tx2);margin-bottom:2px;}
+.roi-mv{font-size:17px;font-weight:500;}
+.verd{border-radius:var(--r);padding:9px 13px;margin-bottom:10px;display:flex;align-items:center;gap:9px;}
+.verd i{font-size:20px;}
+.verd-t{font-size:13px;font-weight:500;}
+.verd-s{font-size:12px;margin-top:1px;}
+.bdr{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:0.5px solid var(--brd);}
+.bdr:last-child{border-bottom:none;font-weight:500;font-size:13px;}
+.imp-upload{border:2px dashed var(--brd2);border-radius:var(--rl);padding:2rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--sur2);margin-bottom:1rem;}
+.imp-upload:hover{border-color:var(--blu);background:var(--blu-bg);}
+.imp-icon{font-size:36px;color:var(--tx3);margin-bottom:8px;}
+.imp-title{font-size:15px;font-weight:500;margin-bottom:5px;}
+.imp-sub{font-size:13px;color:var(--tx2);}
+.imp-progress{background:var(--sur2);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem;}
+.imp-step{display:flex;align-items:center;gap:10px;font-size:13px;padding:5px 0;}
+.imp-step i{font-size:18px;}
+.step-done{color:var(--grn);}
+.step-active{color:var(--blu);}
+.step-wait{color:var(--tx3);}
+.imp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;max-height:400px;overflow-y:auto;padding:4px;}
+.imp-card{background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--r);padding:.75rem .9rem;font-size:12px;}
+.imp-card.sel{border-color:var(--grn);background:var(--grn-bg);}
+.imp-card-t{font-size:13px;font-weight:500;margin-bottom:4px;}
+.imp-card-addr{color:var(--tx2);margin-bottom:5px;font-size:11px;}
+.imp-card-row{display:flex;justify-content:space-between;margin-bottom:2px;}
+.imp-sel-bar{display:flex;align-items:center;gap:10px;padding:.75rem 0;border-top:0.5px solid var(--brd);margin-top:.5rem;}
+.alarm-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--brd);}
+.alarm-item:last-child{border-bottom:none;}
+.alarm-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.alarm-icon.red{background:var(--red-bg);color:var(--red);}
+.alarm-icon.amb{background:var(--amb-bg);color:var(--amb);}
+.alarm-icon.grn{background:var(--grn-bg);color:var(--grn);}
+.fav-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--brd);cursor:pointer;}
+.fav-item:last-child{border-bottom:none;}
+.prog-bar{height:6px;background:var(--brd);border-radius:3px;overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;border-radius:3px;background:var(--grn);}
+@media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;padding:1rem;}.roi-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<!-- ============================================================
-  FIREBASE CONFIG — SUBSTITUA PELOS SEUS DADOS
-  1. Acesse https://console.firebase.google.com
-  2. Crie ou selecione um projeto
-  3. Clique em "Adicionar app" > Web
-  4. Copie o firebaseConfig e cole aqui
-  ============================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ✅ Firebase config — dashboard-leiloes-pe (Marcilio)
 const firebaseConfig = {
   apiKey: "AIzaSyDRV2hmQpSW_lA3WnKkn0ALF6n_uQ4H46Q",
   authDomain: "dashboard-leiloes-pe.firebaseapp.com",
@@ -265,765 +195,648 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const COL = "imoveis";
-
 window._db = db;
-window._col = COL;
-window._fs = { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy };
-
+window._fs = { collection, doc, setDoc, deleteDoc, query, orderBy, writeBatch };
+window._col = "imoveis";
 window.dispatchEvent(new Event('firebase-ready'));
 </script>
 
 <div class="app">
-  <!-- Sidebar -->
-  <nav class="sidebar">
-    <div class="logo">
-      <span class="logo-dot"></span>
-      Leilões PE
-    </div>
-    <button class="nav-item active" onclick="showTab('cards')" id="nav-cards">
-      <i class="ti ti-building"></i> Imóveis
-    </button>
-    <button class="nav-item" onclick="showTab('cronograma')" id="nav-cronograma">
-      <i class="ti ti-calendar"></i> Cronograma
-    </button>
-    <button class="nav-item" onclick="showTab('roi')" id="nav-roi">
-      <i class="ti ti-chart-line"></i> Calculadora ROI
-    </button>
-    <div class="nav-section">Edital ativo</div>
-    <div style="font-size:11px;color:var(--text2);padding:4px 10px;line-height:1.6;">
-      Caixa 0028/0226<br>
-      <span style="color:var(--green);">06/07 e 10/07/2026</span><br>
-      mgl.com.br
-    </div>
-    <div class="nav-section">Filtros rápidos</div>
-    <button class="nav-item" onclick="setQuickFilter('todos')"><i class="ti ti-list"></i> Todos</button>
-    <button class="nav-item" onclick="setQuickFilter('dentro')"><i class="ti ti-tag"></i> Até R$ 200k</button>
-    <button class="nav-item" onclick="setQuickFilter('urgente')"><i class="ti ti-alarm"></i> Urgentes</button>
-    <div class="sidebar-bottom">
-      <div id="conn-status" class="conn-badge connecting"><i class="ti ti-wifi"></i> Conectando...</div>
-      <button class="nav-item" style="margin-top:6px;" onclick="toggleTheme()"><i class="ti ti-moon"></i> Tema escuro</button>
-      <button class="nav-item" style="margin-top:2px;" onclick="openSettings()"><i class="ti ti-settings"></i> Configurações</button>
-      <div id="api-key-status" style="font-size:11px;padding:4px 10px;margin-top:4px;"></div>
-    </div>
-  </nav>
+<nav class="sidebar">
+  <div class="logo"><span class="logo-dot"></span>Leilões PE</div>
+  <button class="nav-item on" onclick="showTab('cards',this)" id="nav-cards"><i class="ti ti-building"></i>Imóveis</button>
+  <button class="nav-item" onclick="showTab('favoritos',this)" id="nav-favoritos"><i class="ti ti-star"></i>Favoritos</button>
+  <button class="nav-item" onclick="showTab('alarmes',this)" id="nav-alarmes"><i class="ti ti-bell"></i>Alarmes <span id="alarm-count-badge"></span></button>
+  <button class="nav-item" onclick="showTab('cron',this)" id="nav-cron"><i class="ti ti-calendar"></i>Cronograma</button>
+  <button class="nav-item" onclick="showTab('roi',this)" id="nav-roi"><i class="ti ti-chart-line"></i>Calculadora ROI</button>
+  <div class="nav-sec">Importar</div>
+  <button class="nav-item" onclick="showTab('importar',this)" id="nav-importar"><i class="ti ti-file-upload"></i>Importar Edital</button>
+  <div class="nav-sec">Edital ativo</div>
+  <div style="font-size:11px;color:var(--tx2);padding:3px 10px;line-height:1.7">Caixa 0028/0226<br><span style="color:var(--grn)">06/07 e 10/07/2026</span><br>mgl.com.br</div>
+  <div class="nav-sec">Filtros</div>
+  <button class="nav-item" onclick="setQF('todos')"><i class="ti ti-list"></i>Todos</button>
+  <button class="nav-item" onclick="setQF('ate200')"><i class="ti ti-tag"></i>Até R$200k</button>
+  <button class="nav-item" onclick="setQF('urgente')"><i class="ti ti-alarm"></i>Urgentes</button>
+  <div class="sidebar-bot">
+    <div id="conn-badge" class="conn wait"><i class="ti ti-wifi"></i>Conectando...</div>
+    <button class="nav-item" onclick="toggleTheme()"><i class="ti ti-moon"></i>Tema escuro</button>
+    <button class="nav-item" onclick="openModal('modal-settings')"><i class="ti ti-settings"></i>Configurações</button>
+    <div style="font-size:11px;color:var(--tx3);padding:3px 10px">IA via servidor</div>
+  </div>
+</nav>
 
-  <!-- Main -->
-  <main class="main">
-    <!-- Loading -->
-    <div id="loading-screen" class="loading">
-      <span class="spinner"></span> Conectando ao Firebase...
-    </div>
+<main class="main">
 
-    <!-- App content (hidden until Firebase ready) -->
-    <div id="app-content" style="display:none">
-      <!-- TAB: Cards -->
-      <div id="tab-cards">
-        <div class="topbar">
-          <div>
-            <div class="page-title">Imóveis em acompanhamento</div>
-            <div class="page-sub">Leilões de imóveis em Pernambuco</div>
-          </div>
-          <button class="btn primary" onclick="openAddModal()">
-            <i class="ti ti-plus"></i> Adicionar imóvel
-          </button>
+<!-- TAB: Imóveis -->
+<div id="tab-cards">
+  <div class="topbar">
+    <div><div class="page-title">Imóveis em acompanhamento</div><div class="page-sub">Leilões de imóveis em Pernambuco</div></div>
+    <div class="btn-row">
+      <button class="btn" onclick="showTab('importar',document.getElementById('nav-importar'))"><i class="ti ti-file-upload"></i>Importar edital</button>
+      <button class="btn pri" onclick="openAdd()"><i class="ti ti-plus"></i>Adicionar imóvel</button>
+    </div>
+  </div>
+  <div class="mets" id="mets"></div>
+  <div class="tabs">
+    <button class="tab on" onclick="setF('todos',this)">Todos</button>
+    <button class="tab" onclick="setF('ativo',this)">Ativos</button>
+    <button class="tab" onclick="setF('urgente',this)">Urgentes</button>
+    <button class="tab" onclick="setF('ate200',this)">Até R$200k</button>
+    <button class="tab" onclick="setF('enc',this)">Encerrados</button>
+  </div>
+  <div class="toolbar">
+    <input class="srch" type="text" id="srch" placeholder="Buscar por cidade, bairro, endereço, tipo..." oninput="renderCards()">
+    <span class="clbl" id="clbl"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- TAB: Favoritos -->
+<div id="tab-favoritos" style="display:none">
+  <div class="topbar"><div><div class="page-title">Favoritos</div><div class="page-sub">Imóveis marcados com estrela</div></div></div>
+  <div id="fav-content"></div>
+</div>
+
+<!-- TAB: Alarmes -->
+<div id="tab-alarmes" style="display:none">
+  <div class="topbar"><div><div class="page-title">Alarmes</div><div class="page-sub">Sessões com menos de 7 dias</div></div></div>
+  <div id="alarm-content"></div>
+</div>
+
+<!-- TAB: Cronograma -->
+<div id="tab-cron" style="display:none">
+  <div class="topbar"><div><div class="page-title">Cronograma</div><div class="page-sub">Todas as sessões agendadas</div></div></div>
+  <div id="cron-content"></div>
+</div>
+
+<!-- TAB: ROI -->
+<div id="tab-roi" style="display:none">
+  <div class="topbar"><div><div class="page-title">Calculadora ROI</div><div class="page-sub">Simule o retorno do investimento</div></div></div>
+  <div class="roi-grid">
+    <div>
+      <div class="roi-sec"><div class="roi-t">Arremate</div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><label class="fl">Lance (R$)</label><input class="fi" type="number" id="rl" value="150000" oninput="calcROI()"></div>
+          <div><label class="fl">Avaliação (R$)</label><input class="fi" type="number" id="ra" value="220000" oninput="calcROI()"></div>
         </div>
-        <div class="metrics" id="metrics"></div>
-        <div class="toolbar">
-          <button class="filter-btn on" onclick="setFilter('todos',this)">Todos</button>
-          <button class="filter-btn" onclick="setFilter('ativo',this)">Ativos</button>
-          <button class="filter-btn" onclick="setFilter('urgente',this)">Urgentes</button>
-          <button class="filter-btn" onclick="setFilter('encerrado',this)">Encerrados</button>
-          <input class="search-input" type="text" id="search-input" placeholder="Buscar por cidade, bairro, endereço..." oninput="renderCards()">
-          <span class="count-label" id="count-label"></span>
-        </div>
-        <div class="cards-grid" id="cards-grid"></div>
       </div>
-
-      <!-- TAB: Cronograma -->
-      <div id="tab-cronograma" style="display:none">
-        <div class="topbar">
-          <div>
-            <div class="page-title">Cronograma de sessões</div>
-            <div class="page-sub">Todas as datas agendadas</div>
-          </div>
+      <div class="roi-sec"><div class="roi-t">Custos</div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><label class="fl">ITBI (%)</label><input class="fi" type="number" id="ri" value="3" step="0.1" oninput="calcROI()"></div>
+          <div><label class="fl">Registro (R$)</label><input class="fi" type="number" id="rr" value="1500" oninput="calcROI()"></div>
         </div>
-        <div id="cronograma-content"></div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><label class="fl">Débitos (R$)</label><input class="fi" type="number" id="rd" value="0" oninput="calcROI()"></div>
+          <div><label class="fl">Comissão leiloeiro (R$)</label><input class="fi" type="number" id="rc" value="0" oninput="calcROI()"></div>
+        </div>
+        <label class="fl">Reforma (R$)</label><input class="fi" type="number" id="rfo" value="20000" oninput="calcROI()">
       </div>
-
-      <!-- TAB: ROI -->
-      <div id="tab-roi" style="display:none">
-        <div class="topbar">
-          <div>
-            <div class="page-title">Calculadora de ROI</div>
-            <div class="page-sub">Simule o retorno do seu investimento</div>
-          </div>
+      <div class="roi-sec"><div class="roi-t">Carregamento</div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><label class="fl">IPTU/mês (R$)</label><input class="fi" type="number" id="rip" value="200" oninput="calcROI()"></div>
+          <div><label class="fl">Cond./mês (R$)</label><input class="fi" type="number" id="rco" value="0" oninput="calcROI()"></div>
         </div>
-        <div class="calc-grid">
-          <div>
-            <div class="calc-section">
-              <div class="calc-section-title">Arremate</div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">Lance (R$)</label><input class="form-input" type="number" id="r-lance" value="150000" oninput="calcROI()"></div>
-                <div class="form-group"><label class="form-label">Avaliação (R$)</label><input class="form-input" type="number" id="r-aval" value="220000" oninput="calcROI()"></div>
-              </div>
-            </div>
-            <div class="calc-section" style="margin-top:10px">
-              <div class="calc-section-title">Custos de aquisição</div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">ITBI (%)</label><input class="form-input" type="number" id="r-itbi" value="3" step="0.1" oninput="calcROI()"></div>
-                <div class="form-group"><label class="form-label">Registro (R$)</label><input class="form-input" type="number" id="r-reg" value="1500" oninput="calcROI()"></div>
-              </div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">Débitos (R$)</label><input class="form-input" type="number" id="r-deb" value="0" oninput="calcROI()"></div>
-                <div class="form-group"><label class="form-label">Comissão leiloeiro (R$)</label><input class="form-input" type="number" id="r-com" value="0" oninput="calcROI()"></div>
-              </div>
-            </div>
-            <div class="calc-section" style="margin-top:10px">
-              <div class="calc-section-title">Reforma e carregamento</div>
-              <div class="form-group"><label class="form-label">Custo reforma (R$)</label><input class="form-input" type="number" id="r-reforma" value="20000" oninput="calcROI()"></div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">IPTU mensal (R$)</label><input class="form-input" type="number" id="r-iptu" value="200" oninput="calcROI()"></div>
-                <div class="form-group"><label class="form-label">Condomínio mensal (R$)</label><input class="form-input" type="number" id="r-cond" value="0" oninput="calcROI()"></div>
-              </div>
-              <div class="form-group" style="margin-top:4px">
-                <label class="form-label">Tempo até venda</label>
-                <div class="slider-wrap">
-                  <input type="range" min="1" max="36" step="1" value="8" id="r-meses" oninput="document.getElementById('r-meses-out').textContent=this.value+'m'; calcROI()">
-                  <span class="slider-val" id="r-meses-out">8m</span>
-                </div>
-              </div>
-            </div>
-            <div class="calc-section" style="margin-top:10px">
-              <div class="calc-section-title">Venda</div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">Preço de venda (R$)</label><input class="form-input" type="number" id="r-venda" value="280000" oninput="calcROI()"></div>
-                <div class="form-group"><label class="form-label">Comissão imob. (%)</label><input class="form-input" type="number" id="r-comimob" value="6" step="0.5" oninput="calcROI()"></div>
-              </div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">IR ganho capital (%)</label><input class="form-input" type="number" id="r-ir" value="15" oninput="calcROI()"></div>
-                <div class="form-group"><label class="form-label">Isenção IR?</label>
-                  <select class="form-input" id="r-isencao" onchange="calcROI()">
-                    <option value="nao">Não</option>
-                    <option value="sim">Sim (único imóvel)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div id="roi-result"></div>
+        <label class="fl">Meses até venda</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="36" step="1" value="8" id="rm" oninput="document.getElementById('rmo').textContent=this.value+'m';calcROI()" style="flex:1;accent-color:var(--grn)">
+          <span style="font-size:13px;font-weight:500;min-width:32px" id="rmo">8m</span>
+        </div>
+      </div>
+      <div class="roi-sec"><div class="roi-t">Venda</div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><label class="fl">Preço venda (R$)</label><input class="fi" type="number" id="rv" value="280000" oninput="calcROI()"></div>
+          <div><label class="fl">Comissão imob. (%)</label><input class="fi" type="number" id="rci" value="6" step="0.5" oninput="calcROI()"></div>
+        </div>
+        <div class="frow">
+          <div><label class="fl">IR ganho capital (%)</label><input class="fi" type="number" id="rir" value="15" oninput="calcROI()"></div>
+          <div><label class="fl">Isenção IR?</label><select class="fi" id="ris" onchange="calcROI()"><option value="n">Não</option><option value="s">Sim</option></select></div>
         </div>
       </div>
     </div>
-  </main>
+    <div id="roi-res"></div>
+  </div>
+</div>
+
+<!-- TAB: Importar -->
+<div id="tab-importar" style="display:none">
+  <div class="topbar"><div><div class="page-title">Importar Edital</div><div class="page-sub">Suba o PDF e importe todos os imóveis automaticamente</div></div></div>
+
+  <div id="imp-upload-area" class="imp-upload" onclick="document.getElementById('imp-pdf').click()">
+    <div class="imp-icon"><i class="ti ti-file-type-pdf"></i></div>
+    <div class="imp-title">Clique ou arraste o PDF do edital aqui</div>
+    <div class="imp-sub">O Claude extrai todos os imóveis automaticamente</div>
+  </div>
+  <input type="file" id="imp-pdf" accept=".pdf" style="display:none" onchange="handleImport(this)">
+
+  <div id="imp-progress" style="display:none"></div>
+  <div id="imp-results" style="display:none"></div>
+</div>
+
+</main>
 </div>
 
 <!-- Modal: Adicionar/Editar -->
-<div class="modal-overlay" id="modal-add">
+<div class="modal-wrap" id="modal-add">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-add')"><i class="ti ti-x"></i></button>
-    <div class="modal-title" id="modal-add-title">Novo imóvel</div>
-    <div id="ai-status-area" style="display:none" class="ai-status">
-      <i class="ti ti-robot" style="font-size:16px;flex-shrink:0"></i>
-      <span id="ai-status-text">Analisando edital com IA...</span>
+    <button class="mcls" onclick="closeModal('modal-add')"><i class="ti ti-x"></i></button>
+    <div class="modal-t" id="modal-add-t">Novo imóvel</div>
+    <div class="fg"><label class="fl">Descrição</label><input class="fi" id="f-tit" placeholder="Ex: Apartamento 2q, Candeias, Jaboatão/PE"></div>
+    <div class="fg"><label class="fl">Endereço completo</label><input class="fi" id="f-end" placeholder="Rua, número, bairro, cidade"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Lance mínimo (R$)</label><input class="fi" type="number" id="f-lan"></div>
+      <div class="fg"><label class="fl">Avaliação (R$)</label><input class="fi" type="number" id="f-ava"></div>
     </div>
-    <div class="form-group"><label class="form-label">Descrição</label><input class="form-input" id="f-titulo" placeholder="Ex: Apartamento 2q, Boa Viagem, Recife/PE"></div>
-    <div class="form-group"><label class="form-label">Endereço completo</label><input class="form-input" id="f-endereco" placeholder="Rua, número, bairro, cidade"></div>
-    <div class="form-row" style="margin-bottom:0">
-      <div class="form-group"><label class="form-label">Lance mínimo (R$)</label><input class="form-input" type="number" id="f-lance"></div>
-      <div class="form-group"><label class="form-label">Avaliação (R$)</label><input class="form-input" type="number" id="f-aval"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Tipo</label><select class="fi" id="f-tip"><option>Apartamento</option><option>Casa</option><option>Terreno</option><option>Comercial</option></select></div>
+      <div class="fg"><label class="fl">Modalidade</label><select class="fi" id="f-mod"><option>Extrajudicial</option><option>Judicial</option><option>Venda Direta</option><option>Leilão SFI — Edital Único</option></select></div>
     </div>
-    <div class="form-row" style="margin-bottom:0">
-      <div class="form-group"><label class="form-label">Tipo</label>
-        <select class="form-input" id="f-tipo"><option>Apartamento</option><option>Casa</option><option>Terreno</option><option>Comercial</option></select>
-      </div>
-      <div class="form-group"><label class="form-label">Modalidade</label>
-        <select class="form-input" id="f-modalidade"><option>Extrajudicial</option><option>Judicial</option><option>Venda Direta</option></select>
-      </div>
+    <div class="fg"><label class="fl">Status</label><select class="fi" id="f-sta"><option value="ativo">Ativo</option><option value="encerrado">Encerrado</option><option value="arrematado">Arrematado</option></select></div>
+    <div class="fg">
+      <label class="fl">Sessões de leilão</label>
+      <div class="sess-ed" id="sess-ed"></div>
+      <button class="add-s" onclick="addSess()"><i class="ti ti-plus"></i> Adicionar sessão</button>
     </div>
-    <div class="form-group"><label class="form-label">Status</label>
-      <select class="form-input" id="f-status"><option value="ativo">Ativo</option><option value="encerrado">Encerrado</option><option value="arrematado">Arrematado</option></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Sessões de leilão</label>
-      <div id="sessions-editor"></div>
-      <button class="add-sess-btn" onclick="addSessionField()"><i class="ti ti-plus"></i> Adicionar sessão</button>
-    </div>
-    <div class="form-group"><label class="form-label">Link do edital / anúncio</label><input class="form-input" id="f-link" placeholder="https://venda-imoveis.caixa.gov.br/..."></div>
-    <div class="form-group"><label class="form-label">Leiloeiro / Plataforma</label><input class="form-input" id="f-leiloeiro" placeholder="Ex: Fidalgo, Superbid, mgl.com.br..."></div>
-    <div class="form-group"><label class="form-label">Observações</label><textarea class="form-input" id="f-obs" style="min-height:70px;resize:vertical"></textarea></div>
-    <div class="form-group">
-      <label class="form-label">Upload do edital (PDF) — análise automática com IA</label>
-      <div class="upload-area" id="upload-area" onclick="document.getElementById('pdf-input').click()">
-        <div class="upload-icon"><i class="ti ti-file-type-pdf"></i></div>
-        <div class="upload-text" id="upload-text">Clique ou arraste o PDF aqui</div>
-        <div class="upload-sub">O Claude analisa e preenche os campos automaticamente</div>
-      </div>
-      <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="handlePdf(this)">
-    </div>
-    <input type="hidden" id="f-edit-id">
-    <button class="btn primary" id="save-btn" onclick="saveImovel()" style="width:100%;justify-content:center;padding:10px;">
-      <i class="ti ti-device-floppy"></i> Salvar imóvel
-    </button>
+    <div class="fg"><label class="fl">Link do edital</label><input class="fi" id="f-lnk" placeholder="https://..."></div>
+    <div class="fg"><label class="fl">Leiloeiro / Plataforma</label><input class="fi" id="f-lei"></div>
+    <div class="fg"><label class="fl">Observações</label><textarea class="fi" id="f-obs"></textarea></div>
+    <input type="hidden" id="f-eid">
+    <button class="save-btn" id="save-btn" onclick="saveIm()"><i class="ti ti-device-floppy"></i> Salvar imóvel</button>
   </div>
 </div>
 
 <!-- Modal: Detalhe -->
-<div class="modal-overlay" id="modal-detail">
-  <div class="modal" style="max-width:600px">
-    <button class="modal-close" onclick="closeModal('modal-detail')"><i class="ti ti-x"></i></button>
-    <div id="detail-content"></div>
+<div class="modal-wrap" id="modal-det">
+  <div class="modal wide">
+    <button class="mcls" onclick="closeModal('modal-det')"><i class="ti ti-x"></i></button>
+    <div id="det-content"></div>
+  </div>
+</div>
+
+<!-- Modal: Configurações -->
+<div class="modal-wrap" id="modal-settings">
+  <div class="modal">
+    <button class="mcls" onclick="closeModal('modal-settings')"><i class="ti ti-x"></i></button>
+    <div class="modal-t"><i class="ti ti-settings" style="vertical-align:-2px;margin-right:6px"></i>Configurações</div>
+    <div style="background:var(--blu-bg);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blu-tx);margin-bottom:14px;line-height:1.7">
+      <strong>Chave de API no Vercel — configuração única:</strong><br>
+      1. Acesse <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blu)">console.anthropic.com/settings/keys</a> → crie uma chave<br>
+      2. No Vercel: <strong>Settings → Environment Variables → Add New</strong><br>
+      3. Nome: <code style="font-family:monospace;font-size:11px;background:var(--sur2);padding:1px 4px;border-radius:3px">ANTHROPIC_API_KEY</code> · Valor: <code style="font-family:monospace;font-size:11px;background:var(--sur2);padding:1px 4px;border-radius:3px">sk-ant-...</code><br>
+      4. Clique em <strong>Save</strong> → <strong>Redeploy</strong>
+    </div>
+    <div id="cfg-feedback" style="font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+    <button class="btn pri" onclick="testServer()" style="width:100%;justify-content:center"><i class="ti ti-plug"></i> Testar conexão com servidor</button>
+    <div style="border-top:0.5px solid var(--brd);margin-top:14px;padding-top:12px;font-size:12px;color:var(--tx2)">
+      <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Status</div>
+      Firebase: <span id="cfg-firebase">verificando...</span>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let imoveis = [];
-let filtro = 'todos';
-let sessCount = 0;
-let editingId = null;
-let pdfB64 = null;
-let firebaseReady = false;
+let imoveis=[], filtro='todos', editId=null, sc=0;
+const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function fR(v){return 'R$ '+Math.round(v).toLocaleString('pt-BR');}
+function pct(v){return (Math.round(v*10)/10).toFixed(1)+'%';}
+function des(v,a){return a>0?(1-v/a)*100:0;}
+function du(d){if(!d)return null;const dt=new Date(d+'T00:00:00'),n=new Date();n.setHours(0,0,0,0);return Math.ceil((dt-n)/86400000);}
+function nxS(im){if(!im.sessions?.length)return null;return im.sessions.map(s=>({...s,days:du(s.date)})).filter(s=>s.days!=null&&s.days>=0).sort((a,b)=>a.days-b.days)[0]||null;}
+function stOf(im){if(im.status==='encerrado')return'enc';if(im.status==='arrematado')return'arr';const n=nxS(im);if(!n)return'enc';if(n.days===0)return'hoj';if(n.days<=3)return'urg';return'ati';}
+function isFav(im){return im.favorito===true;}
+function hasAlarm(im){const n=nxS(im);return n&&n.days>=0&&n.days<=7;}
 
-function fBRL(v){ return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
-function pct(v){ return (Math.round(v*10)/10).toFixed(1) + '%'; }
-function desagio(v,a){ return a > 0 ? (1 - v/a)*100 : 0; }
-function daysUntil(d){ if(!d) return null; const dt=new Date(d+'T00:00:00'); const now=new Date(); now.setHours(0,0,0,0); return Math.ceil((dt-now)/86400000); }
-
-function getNextSession(im){
-  if(!im.sessions||!im.sessions.length) return null;
-  return im.sessions.map(s=>({...s,days:daysUntil(s.date)})).filter(s=>s.days!==null&&s.days>=0).sort((a,b)=>a.days-b.days)[0]||null;
-}
-
-function getStatus(im){
-  if(im.status==='encerrado') return 'encerrado';
-  if(im.status==='arrematado') return 'arrematado';
-  const n=getNextSession(im);
-  if(!n) return 'encerrado';
-  if(n.days===0) return 'hoje';
-  if(n.days<=3) return 'urgente';
-  return 'ativo';
-}
-
-function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-
-window.addEventListener('firebase-ready', () => {
-  firebaseReady = true;
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
-  setConnStatus('online');
-  listenFirestore();
+window.addEventListener('firebase-ready',()=>{
+  setConn('ok');
+  document.getElementById('cfg-firebase').textContent='Conectado ✓';
+  listenFS();
   calcROI();
 });
 
-function setConnStatus(s){
-  const el = document.getElementById('conn-status');
-  const map = { online: ['online','<i class="ti ti-wifi"></i> Conectado'], offline: ['offline','<i class="ti ti-wifi-off"></i> Offline'], connecting: ['connecting','<i class="ti ti-loader"></i> Conectando...'] };
-  el.className = 'conn-badge ' + map[s][0];
-  el.innerHTML = map[s][1];
+function setConn(s){
+  const el=document.getElementById('conn-badge');
+  if(s==='ok'){el.className='conn ok';el.innerHTML='<i class="ti ti-wifi"></i>Conectado';}
+  else if(s==='err'){el.className='conn err';el.innerHTML='<i class="ti ti-wifi-off"></i>Offline';}
+  else{el.className='conn wait';el.innerHTML='<i class="ti ti-loader"></i>Conectando...';}
 }
 
-function listenFirestore(){
-  const { collection, onSnapshot, query, orderBy } = window._fs;
-  const q = query(collection(window._db, window._col), orderBy('updatedAt', 'desc'));
-  onSnapshot(q, snap => {
-    imoveis = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function listenFS(){
+  const{collection,onSnapshot,query,orderBy}=window._fs;
+  const q=query(collection(window._db,window._col),orderBy('updatedAt','desc'));
+  onSnapshot(q,snap=>{
+    imoveis=snap.docs.map(d=>({id:d.id,...d.data()}));
     render();
-  }, err => {
-    console.error(err);
-    setConnStatus('offline');
-  });
+  },err=>{console.error(err);setConn('err');});
 }
 
-async function saveImovel(){
-  const titulo = document.getElementById('f-titulo').value.trim();
-  if(!titulo){ showToast('Preencha a descrição'); return; }
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando...';
-  const id = editingId || ('im_' + Date.now());
-  const existing = editingId ? (imoveis.find(i=>i.id===editingId)||{}) : {};
-  const data = {
-    ...existing, id, titulo,
-    endereco: document.getElementById('f-endereco').value,
-    lance: parseFloat(document.getElementById('f-lance').value)||0,
-    avaliacao: parseFloat(document.getElementById('f-aval').value)||0,
-    tipo: document.getElementById('f-tipo').value,
-    modalidade: document.getElementById('f-modalidade').value,
-    status: document.getElementById('f-status').value,
-    link: document.getElementById('f-link').value,
-    leiloeiro: document.getElementById('f-leiloeiro').value,
-    obs: document.getElementById('f-obs').value,
-    sessions: getSessions(),
-    aiAnalysis: window._lastAI || existing.aiAnalysis || '',
-    pdfB64: pdfB64 || existing.pdfB64 || '',
-    updatedAt: new Date().toISOString()
-  };
-  try {
-    const { doc, setDoc } = window._fs;
-    await setDoc(doc(window._db, window._col, id), data);
-    showToast(editingId ? 'Imóvel atualizado!' : 'Imóvel salvo no Firebase!');
-    closeModal('modal-add');
-  } catch(e) { showToast('Erro ao salvar: ' + e.message); }
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy"></i> Salvar imóvel';
-  editingId = null; pdfB64 = null; window._lastAI = '';
+async function saveDoc(id,data){
+  const{doc,setDoc}=window._fs;
+  await setDoc(doc(window._db,window._col,id),data);
+}
+async function delDoc(id){
+  const{doc,deleteDoc}=window._fs;
+  await deleteDoc(doc(window._db,window._col,id));
 }
 
-async function deleteImovel(id){
-  if(!confirm('Remover este imóvel?')) return;
-  try {
-    const { doc, deleteDoc } = window._fs;
-    await deleteDoc(doc(window._db, window._col, id));
-    showToast('Removido!');
-  } catch(e){ showToast('Erro: '+e.message); }
+function render(){renderMets();renderCards();renderCron();renderAlarmes();renderFavoritos();updateAlarmBadge();}
+
+function renderMets(){
+  const t=imoveis.length,at=imoveis.filter(i=>['ati','urg','hoj'].includes(stOf(i))).length;
+  const ug=imoveis.filter(i=>['urg','hoj'].includes(stOf(i))).length;
+  const mn=t?Math.min(...imoveis.map(i=>i.lance||Infinity)):0;
+  const fvs=imoveis.filter(i=>i.favorito).length;
+  document.getElementById('mets').innerHTML=`
+    <div class="met"><div class="met-l">Total</div><div class="met-v">${t}</div></div>
+    <div class="met"><div class="met-l">Ativos</div><div class="met-v g">${at}</div></div>
+    <div class="met"><div class="met-l">Urgentes</div><div class="met-v r">${ug}</div></div>
+    <div class="met"><div class="met-l">Favoritos</div><div class="met-v a">${fvs}</div></div>
+    <div class="met"><div class="met-l">Menor lance</div><div class="met-v" style="font-size:15px">${t?fR(mn):'—'}</div></div>`;
 }
 
-function render(){ renderMetrics(); renderCards(); renderCronograma(); }
-
-function renderMetrics(){
-  const total=imoveis.length;
-  const ativos=imoveis.filter(i=>['ativo','urgente','hoje'].includes(getStatus(i))).length;
-  const urg=imoveis.filter(i=>['urgente','hoje'].includes(getStatus(i))).length;
-  const min=total?Math.min(...imoveis.map(i=>i.lance||Infinity)):0;
-  document.getElementById('metrics').innerHTML=`
-    <div class="metric"><div class="metric-label">Total</div><div class="metric-value">${total}</div></div>
-    <div class="metric"><div class="metric-label">Ativos</div><div class="metric-value green">${ativos}</div></div>
-    <div class="metric"><div class="metric-label">Urgentes</div><div class="metric-value red">${urg}</div></div>
-    <div class="metric"><div class="metric-label">Menor lance</div><div class="metric-value" style="font-size:16px">${total?fBRL(min):'—'}</div></div>
-  `;
-}
-
-function filteredList(){
-  const txt = norm(document.getElementById('search-input')?.value||'');
+function getFilt(){
+  const txt=(document.getElementById('srch')?.value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   return imoveis.filter(im=>{
-    if(filtro==='ativo'&&!['ativo','urgente','hoje'].includes(getStatus(im))) return false;
-    if(filtro==='urgente'&&!['urgente','hoje'].includes(getStatus(im))) return false;
-    if(filtro==='encerrado'&&getStatus(im)!=='encerrado') return false;
-    if(filtro==='dentro'&&(im.lance||0)>200000) return false;
-    if(txt){
-      const hay=norm([im.titulo,im.endereco,im.leiloeiro,im.tipo,im.modalidade].join(' '));
-      if(!hay.includes(txt)) return false;
-    }
+    const st=stOf(im);
+    if(filtro==='ativo'&&!['ati','urg','hoj'].includes(st))return false;
+    if(filtro==='urgente'&&!['urg','hoj'].includes(st))return false;
+    if(filtro==='ate200'&&(im.lance||0)>200000)return false;
+    if(filtro==='enc'&&st!=='enc')return false;
+    if(txt){const h=[im.titulo,im.endereco,im.leiloeiro,im.tipo].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(!h.includes(txt))return false;}
     return true;
   });
 }
 
 function renderCards(){
-  const list=filteredList();
-  document.getElementById('count-label').textContent=list.length+' imóvel'+(list.length!==1?'is':'');
-  const grid=document.getElementById('cards-grid');
-  if(!list.length){
-    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><i class="ti ti-building-off"></i><div class="empty-title">${imoveis.length?'Nenhum resultado':'Nenhum imóvel ainda'}</div><div class="empty-sub">${imoveis.length?'Ajuste os filtros':'Clique em "Adicionar imóvel" para começar'}</div></div>`;
-    return;
-  }
-  grid.innerHTML=list.map(im=>{
-    const st=getStatus(im);
-    const d=desagio(im.lance,im.avaliacao);
-    const badgeMap={ativo:'badge-ativo',urgente:'badge-urgente',hoje:'badge-hoje',encerrado:'badge-encerrado',arrematado:'badge-arrematado'};
-    const labelMap={ativo:'Ativo',urgente:'Urgente',hoje:'Hoje!',encerrado:'Encerrado',arrematado:'Arrematado'};
-    const sess=(im.sessions||[]).map(s=>{
-      const dy=daysUntil(s.date);
-      const dc=dy===0?'dot-today':(dy>0?'dot-future':'dot-past');
-      const dt=s.date?new Date(s.date+'T00:00:00').toLocaleDateString('pt-BR'):'—';
-      const lbl=dy===0?'Hoje':(dy===1?'Amanhã':(dy>0?`em ${dy}d`:'Encerrada'));
-      return `<div class="sess-row"><span class="dot ${dc}"></span><span style="color:var(--text2)">${s.label||s.order+'ª'} — ${dt}</span><span style="margin-left:auto;color:var(--text3)">${lbl}</span></div>`;
-    }).join('');
-    return`<div class="icard ${st==='urgente'||st==='hoje'?st:''}" onclick="openDetail('${im.id}')">
-      <div class="icard-top">
-        <div class="icard-title">${im.titulo||'Sem título'}</div>
-        <span class="badge ${badgeMap[st]}">${labelMap[st]}</span>
-      </div>
-      <div class="icard-addr"><i class="ti ti-map-pin" style="font-size:12px"></i>${im.endereco||'—'}</div>
-      <div class="icard-row"><span class="icard-key">Lance</span><span class="icard-val green">${fBRL(im.lance)}</span></div>
-      <div class="icard-row"><span class="icard-key">Avaliação</span><span class="icard-val">${fBRL(im.avaliacao)}</span></div>
-      ${d>0?`<div class="icard-row"><span class="icard-key">Deságio</span><span class="icard-val green">${pct(d)}</span></div>`:''}
-      <div class="icard-row"><span class="icard-key">Tipo · Modalidade</span><span class="icard-val" style="font-size:11px">${im.tipo||'—'} · ${im.modalidade||'—'}</span></div>
-      ${sess?`<div class="sessions-mini">${sess}</div>`:''}
-      <div class="icard-actions" onclick="event.stopPropagation()">
-        ${im.link?`<button class="icard-btn" onclick="window.open('${im.link}','_blank')"><i class="ti ti-external-link"></i> Edital</button>`:''}
-        <button class="icard-btn" onclick="editImovel('${im.id}')"><i class="ti ti-edit"></i> Editar</button>
-        <button class="icard-btn danger" onclick="deleteImovel('${im.id}')"><i class="ti ti-trash"></i></button>
+  const list=getFilt();
+  document.getElementById('clbl').textContent=list.length+' imóvel'+(list.length!==1?'is':'');
+  const g=document.getElementById('grid');
+  if(!list.length){g.innerHTML=`<div class="empty"><i class="ti ti-building-off"></i><div class="empty-t">${imoveis.length?'Nenhum resultado':'Nenhum imóvel ainda'}</div><div class="empty-s">${imoveis.length?'Ajuste os filtros':'Clique em Importar Edital para começar'}</div></div>`;return;}
+  const bm={ati:'b-a',urg:'b-u',hoj:'b-h',enc:'b-e',arr:'b-arr'};
+  const lm={ati:'Ativo',urg:'Urgente',hoj:'Hoje!',enc:'Encerrado',arr:'Arrematado'};
+  g.innerHTML=list.map(im=>{
+    const st=stOf(im),d=des(im.lance,im.avaliacao),al=hasAlarm(im),fv=isFav(im);
+    const sess=(im.sessions||[]).map(s=>{const dy=du(s.date);const dc=dy===0?'dot-t':(dy>0?'dot-f':'dot-p');const dt=s.date?new Date(s.date+'T00:00:00').toLocaleDateString('pt-BR'):'—';const lb=dy===0?'Hoje':(dy===1?'Amanhã':(dy>0?`em ${dy}d`:'Encerrada'));return`<div class="srow"><span class="dot ${dc}"></span><span style="color:var(--tx2)">${s.label||s.order+'ª'} — ${dt}</span><span style="margin-left:auto;color:var(--tx3)">${lb}</span></div>`;}).join('');
+    return`<div class="card ${st==='urg'?'urg':(st==='hoj'?'hoj':'')} ${fv?'fav':''}" onclick="openDet('${im.id}')">
+      ${al?`<span class="alarm-badge"><i class="ti ti-bell" style="font-size:10px"></i> ${nxS(im).days===0?'HOJE':(nxS(im).days===1?'Amanhã':'em '+nxS(im).days+'d')}</span>`:''}
+      <div class="ctop"><div class="ctitle">${im.titulo||'Sem título'}</div><span class="badge ${bm[st]}">${lm[st]}</span></div>
+      <div class="caddr"><i class="ti ti-map-pin" style="font-size:11px"></i> ${im.endereco||'—'}</div>
+      <div class="crow"><span class="ck">Lance</span><span class="cv g">${fR(im.lance)}</span></div>
+      <div class="crow"><span class="ck">Avaliação</span><span class="cv">${fR(im.avaliacao)}</span></div>
+      ${d>0?`<div class="crow"><span class="ck">Deságio</span><span class="cv g">${pct(d)}</span></div>`:''}
+      <div class="crow"><span class="ck">Tipo</span><span class="cv" style="font-size:11px">${im.tipo||'—'} · ${im.modalidade||'—'}</span></div>
+      ${sess?`<div class="smini">${sess}</div>`:''}
+      ${im.obs?`<div class="warn">${im.obs.substring(0,80)}${im.obs.length>80?'...':''}</div>`:''}
+      <div class="cact" onclick="event.stopPropagation()">
+        <button class="cbtn fav-btn ${fv?'active':''}" onclick="toggleFav('${im.id}')" title="${fv?'Remover favorito':'Favoritar'}"><i class="ti ti-star${fv?'-filled':''}"></i></button>
+        ${im.link?`<button class="cbtn" onclick="window.open('${im.link}','_blank')"><i class="ti ti-external-link"></i></button>`:''}
+        <button class="cbtn" onclick="openEdit('${im.id}')"><i class="ti ti-edit"></i> Editar</button>
+        <button class="cbtn danger" onclick="delIm('${im.id}')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
 }
 
-function renderCronograma(){
-  const all=[];
-  imoveis.forEach(im=>(im.sessions||[]).forEach(s=>{ if(s.date) all.push({date:s.date,label:s.label,titulo:im.titulo,lance:im.lance,id:im.id}); }));
+function renderAlarmes(){
+  const alarms=imoveis.flatMap(im=>(im.sessions||[]).map(s=>({...s,days:du(s.date),im})).filter(s=>s.days!=null&&s.days>=0&&s.days<=7)).sort((a,b)=>a.days-b.days);
+  const el=document.getElementById('alarm-content');
+  if(!alarms.length){el.innerHTML=`<div class="empty"><i class="ti ti-bell-off"></i><div class="empty-t">Nenhum alarme ativo</div><div class="empty-s">Sessões dentro de 7 dias aparecerão aqui</div></div>`;return;}
+  el.innerHTML=alarms.map(a=>{
+    const cls=a.days===0?'red':(a.days<=3?'amb':'grn');
+    const lbl=a.days===0?'HOJE!':(a.days===1?'Amanhã':`Em ${a.days} dias`);
+    const dt=a.date?new Date(a.date+'T00:00:00').toLocaleDateString('pt-BR'):'—';
+    const prog=Math.round((1-a.days/7)*100);
+    return`<div class="alarm-item" onclick="openDet('${a.im.id}');showTab('cards',document.getElementById('nav-cards'))">
+      <div class="alarm-icon ${cls}"><i class="ti ti-bell"></i></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${a.im.titulo||'Imóvel'}</div>
+        <div style="font-size:12px;color:var(--tx2)">${a.label||a.order+'ª sessão'} — ${dt}</div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${prog}%;background:var(--${cls==='red'?'red':(cls==='amb'?'amb':'grn')})"></div></div>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--${cls==='red'?'red':(cls==='amb'?'amb':'grn')})">${lbl}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderFavoritos(){
+  const favs=imoveis.filter(i=>i.favorito);
+  const el=document.getElementById('fav-content');
+  if(!favs.length){el.innerHTML=`<div class="empty"><i class="ti ti-star-off"></i><div class="empty-t">Nenhum favorito ainda</div><div class="empty-s">Clique na estrela em qualquer imóvel para favoritar</div></div>`;return;}
+  el.innerHTML=`<div class="grid">${favs.map(im=>{
+    const st=stOf(im),d=des(im.lance,im.avaliacao),al=hasAlarm(im);
+    const bm={ati:'b-a',urg:'b-u',hoj:'b-h',enc:'b-e',arr:'b-arr'};
+    const lm={ati:'Ativo',urg:'Urgente',hoj:'Hoje!',enc:'Encerrado',arr:'Arrematado'};
+    return`<div class="card fav ${st==='urg'?'urg':(st==='hoj'?'hoj':'')}" onclick="openDet('${im.id}')">
+      ${al?`<span class="alarm-badge"><i class="ti ti-bell" style="font-size:10px"></i> ${nxS(im).days===0?'HOJE':`em ${nxS(im).days}d`}</span>`:''}
+      <div class="ctop"><div class="ctitle">${im.titulo||'Sem título'}</div><span class="badge ${bm[st]}">${lm[st]}</span></div>
+      <div class="caddr"><i class="ti ti-map-pin" style="font-size:11px"></i> ${im.endereco||'—'}</div>
+      <div class="crow"><span class="ck">Lance</span><span class="cv g">${fR(im.lance)}</span></div>
+      <div class="crow"><span class="ck">Deságio</span><span class="cv g">${d>0?pct(d):'0%'}</span></div>
+      <div class="cact" onclick="event.stopPropagation()">
+        <button class="cbtn fav-btn active" onclick="toggleFav('${im.id}')"><i class="ti ti-star-filled"></i> Remover</button>
+        <button class="cbtn" onclick="openDet('${im.id}')"><i class="ti ti-eye"></i> Ver detalhes</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function updateAlarmBadge(){
+  const n=imoveis.filter(im=>(im.sessions||[]).some(s=>{const d=du(s.date);return d!=null&&d>=0&&d<=7;})).length;
+  const el=document.getElementById('alarm-count-badge');
+  if(n>0){el.style.cssText='background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:20px;margin-left:4px';el.textContent=n;}
+  else{el.textContent='';}
+}
+
+function renderCron(){
+  const all=[];imoveis.forEach(im=>(im.sessions||[]).forEach(s=>{if(s.date)all.push({date:s.date,label:s.label,titulo:im.titulo,lance:im.lance,id:im.id});}));
   all.sort((a,b)=>a.date.localeCompare(b.date));
-  const el=document.getElementById('cronograma-content');
-  if(!all.length){ el.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i><div class="empty-title">Nenhuma sessão agendada</div></div>'; return; }
-  const byMonth={};
-  all.forEach(item=>{ const d=new Date(item.date+'T00:00:00'); const k=d.getFullYear()+'-'+d.getMonth(); if(!byMonth[k]) byMonth[k]={label:MESES[d.getMonth()]+' '+d.getFullYear(),items:[]}; byMonth[k].items.push(item); });
-  el.innerHTML=Object.values(byMonth).map(m=>`
-    <div class="cron-month">
-      <div class="cron-month-label">${m.label}</div>
-      ${m.items.map(item=>{
-        const d=new Date(item.date+'T00:00:00');
-        const dy=daysUntil(item.date);
-        const isT=dy===0,isP=dy!==null&&dy<0;
-        return`<div class="cron-item" onclick="openDetail('${item.id}')">
-          <div class="cron-date" style="${isT?'background:var(--amber-bg)':''} ${isP?'opacity:.5':''}">
-            <div class="cron-day">${d.getDate()}</div>
-            <div class="cron-dow">${DIAS[d.getDay()]}</div>
-          </div>
-          <div style="flex:1;padding-top:2px">
-            <div class="cron-title">${item.titulo||'Imóvel'}</div>
-            <div class="cron-sub">${item.label||'Sessão'}${isT?' — <strong>HOJE</strong>':(dy===1?' — amanhã':(dy>0?` — em ${dy} dias`:' — encerrada'))}</div>
-            <div class="cron-price">${fBRL(item.lance)}</div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
+  const el=document.getElementById('cron-content');
+  if(!all.length){el.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i><div class="empty-t">Nenhuma sessão agendada</div></div>';return;}
+  const bM={};all.forEach(item=>{const d=new Date(item.date+'T00:00:00');const k=d.getFullYear()+'-'+d.getMonth();if(!bM[k])bM[k]={label:MESES[d.getMonth()]+' '+d.getFullYear(),items:[]};bM[k].items.push(item);});
+  el.innerHTML=Object.values(bM).map(m=>`<div class="cron-m"><div class="cron-ml">${m.label}</div>${m.items.map(item=>{const d=new Date(item.date+'T00:00:00'),dy=du(item.date),isT=dy===0,isP=dy!=null&&dy<0;return`<div class="cron-i" onclick="openDet('${item.id}');showTab('cards',document.getElementById('nav-cards'))"><div class="cron-d" style="${isT?'background:var(--amb-bg)':''}${isP?';opacity:.5':''}"><div class="cron-day">${d.getDate()}</div><div class="cron-dow">${DIAS[d.getDay()]}</div></div><div style="flex:1;padding-top:2px"><div class="cron-t">${item.titulo||'Imóvel'}</div><div class="cron-s">${item.label||'Sessão'}${isT?' — <strong>HOJE</strong>':(dy===1?' — amanhã':(dy>0?` — em ${dy} dias`:' — encerrada'))}</div><div class="cron-p">${fR(item.lance)}</div></div></div>`;}).join('')}</div>`).join('');
 }
 
-function openDetail(id){
-  const im=imoveis.find(i=>i.id===id);
-  if(!im) return;
-  const d=desagio(im.lance,im.avaliacao);
-  const itbi=im.lance?Math.round(im.lance*0.03):0;
-  const reg=im.lance?Math.round(im.lance*0.005):0;
-  const total=im.lance?im.lance+itbi+reg:0;
-  const sess=(im.sessions||[]).map((s,i)=>{
-    const dy=daysUntil(s.date); const cls=dy===0?'today':(dy>0?'future':'past');
-    const dt=s.date?new Date(s.date+'T00:00:00').toLocaleDateString('pt-BR'):'—';
-    const lbl=dy===0?'Hoje':(dy===1?'Amanhã':(dy>0?`Em ${dy} dias`:'Encerrada'));
-    return`<div class="timeline-item"><div class="tl-dot ${cls}">${i+1}</div><div><div class="tl-label">${s.label||s.order+'ª sessão'}</div><div class="tl-date">${dt} · ${lbl}</div></div></div>`;
-  }).join('');
-  document.getElementById('detail-content').innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px">
-      <div style="font-size:16px;font-weight:500">${im.titulo||'Imóvel'}</div>
-      <button class="btn" onclick="editImovel('${im.id}');closeModal('modal-detail')"><i class="ti ti-edit"></i> Editar</button>
+async function toggleFav(id){
+  const im=imoveis.find(i=>i.id===id);if(!im)return;
+  const updated={...im,favorito:!im.favorito,updatedAt:new Date().toISOString()};
+  await saveDoc(id,updated);
+  showToast(updated.favorito?'Adicionado aos favoritos!':'Removido dos favoritos');
+}
+
+function openDet(id){
+  const im=imoveis.find(i=>i.id===id);if(!im)return;
+  const d=des(im.lance,im.avaliacao),itbi=Math.round(im.lance*.03),reg=Math.round(im.lance*.005),tot=im.lance+itbi+reg;
+  const sess=(im.sessions||[]).map((s,i)=>{const dy=du(s.date);const cls=dy===0?'t':(dy>0?'f':'p');const dt=s.date?new Date(s.date+'T00:00:00').toLocaleDateString('pt-BR'):'—';const lb=dy===0?'Hoje':(dy===1?'Amanhã':(dy>0?`Em ${dy} dias`:'Encerrada'));return`<div class="tl-i"><div class="tl-dot ${cls}">${i+1}</div><div><div class="tl-l">${s.label||s.order+'ª sessão'}</div><div class="tl-d">${dt} · ${lb}</div></div></div>`;}).join('');
+  document.getElementById('det-content').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:500">${im.titulo||'Imóvel'}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="toggleFav('${im.id}')"><i class="ti ti-star${im.favorito?'-filled':''}"></i></button>
+        <button class="btn" onclick="openEdit('${im.id}');closeModal('modal-det')"><i class="ti ti-edit"></i></button>
+      </div>
     </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:14px"><i class="ti ti-map-pin" style="font-size:12px"></i> ${im.endereco||'—'}</div>
-    <div class="detail-grid">
-      <div class="detail-item"><div class="detail-key">Lance mínimo</div><div class="detail-val" style="color:var(--green)">${fBRL(im.lance)}</div></div>
-      <div class="detail-item"><div class="detail-key">Avaliação</div><div class="detail-val">${fBRL(im.avaliacao)}</div></div>
-      <div class="detail-item"><div class="detail-key">Deságio</div><div class="detail-val">${d>0?pct(d):'0%'}</div></div>
-      <div class="detail-item"><div class="detail-key">Tipo</div><div class="detail-val">${im.tipo||'—'}</div></div>
-      <div class="detail-item"><div class="detail-key">Modalidade</div><div class="detail-val">${im.modalidade||'—'}</div></div>
-      <div class="detail-item"><div class="detail-key">Leiloeiro</div><div class="detail-val" style="font-size:11px">${im.leiloeiro||'—'}</div></div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:12px"><i class="ti ti-map-pin" style="font-size:11px"></i> ${im.endereco||'—'}</div>
+    <div class="det-g">
+      <div class="di"><div class="dk">Lance mínimo</div><div class="dv" style="color:var(--grn)">${fR(im.lance)}</div></div>
+      <div class="di"><div class="dk">Avaliação</div><div class="dv">${fR(im.avaliacao)}</div></div>
+      <div class="di"><div class="dk">Deságio</div><div class="dv">${d>0?pct(d):'0%'}</div></div>
+      <div class="di"><div class="dk">Tipo</div><div class="dv">${im.tipo||'—'}</div></div>
+      <div class="di"><div class="dk">Modalidade</div><div class="dv" style="font-size:11px">${im.modalidade||'—'}</div></div>
+      <div class="di"><div class="dk">Leiloeiro</div><div class="dv" style="font-size:11px">${im.leiloeiro||'—'}</div></div>
     </div>
-    ${total?`<div style="margin-bottom:14px"><div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Custo estimado de aquisição</div>
-      <div class="custo-row"><span>Lance</span><span>${fBRL(im.lance)}</span></div>
-      <div class="custo-row"><span>ITBI (~3%)</span><span>${fBRL(itbi)}</span></div>
-      <div class="custo-row"><span>Registro (~0,5%)</span><span>${fBRL(reg)}</span></div>
-      <div class="custo-row"><span style="font-weight:500">Total estimado</span><span style="color:var(--red)">${fBRL(total)}</span></div>
-    </div>`:''}
-    ${sess?`<div style="margin-bottom:14px"><div style="font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Sessões</div>${sess}</div>`:''}
-    ${im.obs?`<div style="margin-bottom:14px"><div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Observações</div><div style="font-size:13px;color:var(--text2);line-height:1.6">${im.obs}</div></div>`:''}
-    ${im.aiAnalysis?`<div><div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Análise do edital (IA)</div><div class="ai-analysis">${im.aiAnalysis}</div></div>`:''}
-    ${im.link?`<div style="margin-top:14px"><a href="${im.link}" target="_blank" class="btn" style="width:100%;justify-content:center"><i class="ti ti-external-link"></i> Abrir edital</a></div>`:''}
+    <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Custo estimado de aquisição</div>
+      <div class="cr"><span>Lance</span><span>${fR(im.lance)}</span></div>
+      <div class="cr"><span>ITBI (~3%)</span><span>${fR(itbi)}</span></div>
+      <div class="cr"><span>Registro (~0,5%)</span><span>${fR(reg)}</span></div>
+      <div class="cr"><span style="font-weight:500">Total estimado</span><span style="color:var(--red)">${fR(tot)}</span></div>
+    </div>
+    ${sess?`<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Sessões</div>${sess}</div>`:''}
+    ${im.obs?`<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Observações / Análise</div><div style="font-size:13px;color:var(--tx2);line-height:1.6;white-space:pre-wrap">${im.obs}</div></div>`:''}
+    ${im.link?`<a href="${im.link}" target="_blank" class="btn" style="display:flex;justify-content:center;margin-top:8px"><i class="ti ti-external-link"></i> Abrir edital</a>`:''}
   `;
-  document.getElementById('modal-detail').classList.add('open');
+  openModal('modal-det');
 }
 
-function openAddModal(){
-  editingId=null; pdfB64=null; sessCount=0; window._lastAI='';
-  document.getElementById('modal-add-title').textContent='Novo imóvel';
-  ['f-titulo','f-endereco','f-lance','f-aval','f-link','f-leiloeiro','f-obs'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-status').value='ativo';
-  document.getElementById('f-edit-id').value='';
-  document.getElementById('sessions-editor').innerHTML='';
-  document.getElementById('upload-text').textContent='Clique ou arraste o PDF aqui';
-  document.getElementById('ai-status-area').style.display='none';
-  addSessionField();
-  document.getElementById('modal-add').classList.add('open');
-}
+function openAdd(){editId=null;sc=0;document.getElementById('modal-add-t').textContent='Novo imóvel';['f-tit','f-end','f-lan','f-ava','f-lnk','f-lei','f-obs'].forEach(id=>document.getElementById(id).value='');document.getElementById('f-sta').value='ativo';document.getElementById('f-eid').value='';document.getElementById('sess-ed').innerHTML='';addSess();openModal('modal-add');}
 
-function editImovel(id){
-  const im=imoveis.find(i=>i.id===id);
-  if(!im) return;
-  editingId=id; pdfB64=im.pdfB64||null; sessCount=0;
-  document.getElementById('modal-add-title').textContent='Editar imóvel';
-  document.getElementById('f-titulo').value=im.titulo||'';
-  document.getElementById('f-endereco').value=im.endereco||'';
-  document.getElementById('f-lance').value=im.lance||'';
-  document.getElementById('f-aval').value=im.avaliacao||'';
-  document.getElementById('f-tipo').value=im.tipo||'Apartamento';
-  document.getElementById('f-modalidade').value=im.modalidade||'Extrajudicial';
-  document.getElementById('f-status').value=im.status||'ativo';
-  document.getElementById('f-link').value=im.link||'';
-  document.getElementById('f-leiloeiro').value=im.leiloeiro||'';
+function openEdit(id){
+  const im=imoveis.find(i=>i.id===id);if(!im)return;
+  editId=id;sc=0;
+  document.getElementById('modal-add-t').textContent='Editar imóvel';
+  document.getElementById('f-tit').value=im.titulo||'';
+  document.getElementById('f-end').value=im.endereco||'';
+  document.getElementById('f-lan').value=im.lance||'';
+  document.getElementById('f-ava').value=im.avaliacao||'';
+  document.getElementById('f-tip').value=im.tipo||'Apartamento';
+  document.getElementById('f-mod').value=im.modalidade||'Extrajudicial';
+  document.getElementById('f-sta').value=im.status||'ativo';
+  document.getElementById('f-lnk').value=im.link||'';
+  document.getElementById('f-lei').value=im.leiloeiro||'';
   document.getElementById('f-obs').value=im.obs||'';
-  document.getElementById('f-edit-id').value=id;
-  document.getElementById('sessions-editor').innerHTML='';
-  (im.sessions||[]).forEach(s=>addSessionField(s));
-  if(!(im.sessions||[]).length) addSessionField();
-  document.getElementById('upload-text').textContent=pdfB64?'PDF já carregado ✓':'Clique ou arraste o PDF aqui';
-  document.getElementById('ai-status-area').style.display='none';
-  document.getElementById('modal-add').classList.add('open');
+  document.getElementById('f-eid').value=id;
+  document.getElementById('sess-ed').innerHTML='';
+  (im.sessions||[]).forEach(s=>addSess(s));
+  if(!(im.sessions||[]).length)addSess();
+  openModal('modal-add');
 }
 
-function addSessionField(data){
-  sessCount++;
-  const n=sessCount;
-  const row=document.createElement('div');
-  row.className='sess-edit-row';
-  row.innerHTML=`<input class="form-input" style="max-width:110px" type="text" value="${data?data.label:n+'ª sessão'}" placeholder="Rótulo">
-    <input class="form-input" type="date" value="${data?data.date:''}">
-    <button style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0 4px" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;
-  document.getElementById('sessions-editor').appendChild(row);
+function addSess(data){sc++;const row=document.createElement('div');row.className='sr';row.innerHTML=`<input class="fi" type="text" value="${data?data.label:sc+'ª sessão'}" style="max-width:110px"><input class="fi" type="date" value="${data?data.date:''}"><button style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:15px" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;document.getElementById('sess-ed').appendChild(row);}
+
+function getSess(){return Array.from(document.getElementById('sess-ed').querySelectorAll('.sr')).map((r,i)=>{const ins=r.querySelectorAll('input');return{order:i+1,label:ins[0].value||`${i+1}ª sessão`,date:ins[1].value};}).filter(s=>s.date);}
+
+async function saveIm(){
+  const tit=document.getElementById('f-tit').value.trim();if(!tit){showToast('Preencha a descrição');return;}
+  const btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Salvando...';
+  const id=editId||('im_'+Date.now());
+  const ex=editId?(imoveis.find(i=>i.id===editId)||{}):{};
+  const novo={...ex,id,titulo:tit,endereco:document.getElementById('f-end').value,lance:parseFloat(document.getElementById('f-lan').value)||0,avaliacao:parseFloat(document.getElementById('f-ava').value)||0,tipo:document.getElementById('f-tip').value,modalidade:document.getElementById('f-mod').value,status:document.getElementById('f-sta').value,link:document.getElementById('f-lnk').value,leiloeiro:document.getElementById('f-lei').value,obs:document.getElementById('f-obs').value,sessions:getSess(),favorito:ex.favorito||false,updatedAt:new Date().toISOString()};
+  try{await saveDoc(id,novo);showToast(editId?'Atualizado!':'Salvo!');closeModal('modal-add');}catch(e){showToast('Erro: '+e.message);}
+  btn.disabled=false;btn.textContent='Salvar imóvel';editId=null;
 }
 
-function getSessions(){
-  return Array.from(document.getElementById('sessions-editor').querySelectorAll('.sess-edit-row')).map((row,i)=>{
-    const ins=row.querySelectorAll('input');
-    return {order:i+1,label:ins[0].value||`${i+1}ª sessão`,date:ins[1].value};
-  }).filter(s=>s.date);
-}
+async function delIm(id){if(!confirm('Remover este imóvel?'))return;try{await delDoc(id);showToast('Removido!');}catch(e){showToast('Erro: '+e.message);}}
 
-async function handlePdf(input){
-  const file=input.files[0]; if(!file) return;
-  document.getElementById('upload-text').textContent='Lendo '+file.name+'...';
-  const reader=new FileReader();
-  reader.onload=async(e)=>{
-    pdfB64=e.target.result.split(',')[1];
-    document.getElementById('upload-text').textContent='Analisando com IA...';
-    document.getElementById('ai-status-area').style.display='flex';
-    document.getElementById('ai-status-text').textContent='Analisando edital com IA...';
-    try {
-      const resp=await fetch('/api/analyze-edital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfBase64:pdfB64})});
-      const data=await resp.json();
-      const text=data.content?.map(c=>c.text||'').join('\n')||'';
-      if(text){
-        window._lastAI=text;
-        document.getElementById('ai-status-text').textContent='Análise concluída! Verifique e ajuste os campos.';
-        const pre=document.createElement('div');
-        pre.style.cssText='margin-top:8px;font-size:11px;max-height:180px;overflow-y:auto;background:var(--surface2);border-radius:var(--radius);padding:10px;white-space:pre-wrap;color:var(--text2)';
-        pre.textContent=text;
-        document.getElementById('ai-status-area').appendChild(pre);
-        const lm=text.match(/lance\s*m[íi]nimo[:\s]+R?\$?\s*([\d.,]+)/i);
-        if(lm&&!document.getElementById('f-lance').value) document.getElementById('f-lance').value=Math.round(parseFloat(lm[1].replace(/\./g,'').replace(',','.')));
-        const am=text.match(/avalia[çc][ãa]o[:\s]+R?\$?\s*([\d.,]+)/i);
-        if(am&&!document.getElementById('f-aval').value) document.getElementById('f-aval').value=Math.round(parseFloat(am[1].replace(/\./g,'').replace(',','.')));
-      }
-    } catch(e){ document.getElementById('ai-status-text').textContent='Erro na análise. Preencha manualmente.'; }
-    document.getElementById('upload-text').textContent=file.name+' ✓';
-  };
-  reader.readAsDataURL(file);
-}
+// ── Bulk Import ──────────────────────────────────────────────────
+let importData=[];
 
-// ROI Calculator
-function calcROI(){
-  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
-  const lance=g('r-lance'), itbi=lance*g('r-itbi')/100, reg=g('r-reg'), deb=g('r-deb'), com=g('r-com');
-  const reforma=g('r-reforma'), meses=parseInt(document.getElementById('r-meses')?.value)||8;
-  const carr=(g('r-iptu')+g('r-cond'))*meses;
-  const custo=lance+itbi+reg+deb+com+reforma+carr;
-  const venda=g('r-venda'), comImob=venda*g('r-comimob')/100;
-  const ganho=venda-lance;
-  const isencao=document.getElementById('r-isencao')?.value==='sim';
-  const ir=isencao?0:Math.max(0,ganho*g('r-ir')/100);
-  const receita=venda-comImob-ir;
-  const lucro=receita-custo;
-  const roi=custo>0?(lucro/custo)*100:0;
-  const roiAA=meses>0?roi/meses*12:0;
-  const isGood=lucro>0&&roi>10, isOk=lucro>0;
-  const vBg=isGood?'var(--green-bg)':(isOk?'var(--amber-bg)':'var(--red-bg)');
-  const vTxt=isGood?'var(--green-text)':(isOk?'var(--amber-text)':'var(--red-text)');
-  const vIcon=isGood?'ti-circle-check':(isOk?'ti-alert-circle':'ti-circle-x');
-  const vTitle=isGood?'Bom potencial':(isOk?'Retorno modesto':'Prejuízo projetado');
-  document.getElementById('roi-result').innerHTML=`
-    <div class="verdict" style="background:${vBg}">
-      <i class="ti ${vIcon}" style="font-size:22px;color:${vTxt}"></i>
-      <div><div class="verdict-title" style="color:${vTxt}">${vTitle}</div><div class="verdict-sub" style="color:${vTxt}">ROI ${pct(roi)} em ${meses} meses (${pct(roiAA)}/ano)</div></div>
-    </div>
-    <div class="roi-metrics">
-      <div class="roi-m"><div class="roi-m-label">Custo total</div><div class="roi-m-val" style="color:var(--red);font-size:15px">${fBRL(custo)}</div></div>
-      <div class="roi-m"><div class="roi-m-label">Lucro líquido</div><div class="roi-m-val" style="color:${lucro>=0?'var(--green)':'var(--red)'};font-size:15px">${fBRL(lucro)}</div></div>
-      <div class="roi-m"><div class="roi-m-label">ROI anualizado</div><div class="roi-m-val" style="color:${roiAA>=0?'var(--green)':'var(--red)'};font-size:15px">${pct(roiAA)}</div></div>
-    </div>
-    <div class="result-card">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Breakdown</div>
-      <div class="breakdown-row"><span>Lance</span><span class="neg">${fBRL(lance)}</span></div>
-      <div class="breakdown-row"><span>ITBI (${g('r-itbi')}%)</span><span class="neg">${fBRL(itbi)}</span></div>
-      <div class="breakdown-row"><span>Registro</span><span class="neg">${fBRL(reg)}</span></div>
-      ${deb?`<div class="breakdown-row"><span>Débitos</span><span class="neg">${fBRL(deb)}</span></div>`:''}
-      ${com?`<div class="breakdown-row"><span>Comissão leiloeiro</span><span class="neg">${fBRL(com)}</span></div>`:''}
-      <div class="breakdown-row"><span>Reforma</span><span class="neg">${fBRL(reforma)}</span></div>
-      <div class="breakdown-row"><span>Carregamento (${meses}m)</span><span class="neg">${fBRL(carr)}</span></div>
-      <div class="breakdown-row"><span>Preço de venda</span><span class="pos">+${fBRL(venda)}</span></div>
-      <div class="breakdown-row"><span>Comissão imob.</span><span class="neg">${fBRL(comImob)}</span></div>
-      <div class="breakdown-row"><span>IR${isencao?' (isento)':''}</span><span class="neg">${fBRL(ir)}</span></div>
-      <div class="breakdown-row"><span>Lucro líquido</span><span class="${lucro>=0?'pos':'neg'}">${lucro>=0?'+':''}${fBRL(lucro)}</span></div>
+async function handleImport(input){
+  const file=input.files[0];if(!file)return;
+  const prog=document.getElementById('imp-progress');
+  const res=document.getElementById('imp-results');
+  prog.style.display='block';res.style.display='none';
+  prog.innerHTML=`
+    <div class="imp-progress">
+      <div class="imp-step step-active"><i class="ti ti-loader"></i> Lendo PDF...</div>
     </div>`;
-}
-
-function showTab(tab){
-  ['cards','cronograma','roi'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
-    document.getElementById('nav-'+t).classList.toggle('active',t===tab);
-  });
-  if(tab==='cronograma') renderCronograma();
-}
-
-function setFilter(f,btn){
-  filtro=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  renderCards();
-}
-
-function setQuickFilter(f){
-  filtro=f;
-  showTab('cards');
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('on',b.textContent.trim().toLowerCase().includes(f==='todos'?'todos':(f==='dentro'?'200':'urgentes'))));
-  renderCards();
-}
-
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-
-function toggleTheme(){
-  const d=document.documentElement;
-  d.dataset.theme=d.dataset.theme==='dark'?'':'dark';
-}
-
-function showToast(msg){
-  const t=document.getElementById('toast'); t.textContent=msg;
-  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
-}
-
-document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
-
-const ua=document.getElementById('upload-area');
-ua.addEventListener('dragover',e=>{e.preventDefault();ua.style.borderColor='var(--blue)';});
-ua.addEventListener('dragleave',()=>ua.style.borderColor='');
-ua.addEventListener('drop',e=>{
-  e.preventDefault(); ua.style.borderColor='';
-  const f=e.dataTransfer.files[0];
-  if(f&&f.type==='application/pdf'){
-    const dt=new DataTransfer(); dt.items.add(f);
-    const inp=document.getElementById('pdf-input'); inp.files=dt.files; handlePdf(inp);
-  }
-});
-
-// ── API Key management (via Netlify proxy) ─────────────────────
-function getApiKey(){ return ''; }
-
-function updateApiKeyStatus(){
-  const el = document.getElementById('api-key-status');
-  if(el) el.innerHTML = '<span style="color:var(--text3);font-size:11px"><i class="ti ti-robot" style="font-size:11px"></i> IA via servidor</span>';
-}
-
-function openSettings(){
-  const key = getApiKey();
-  document.getElementById('settings-apikey').value = key;
-  document.getElementById('apikey-feedback').textContent = '';
-  const connStatus = document.getElementById('conn-status');
-  const connEl = document.getElementById('firebase-conn-detail');
-  if(connEl && connStatus) connEl.innerHTML = 'Firebase: ' + connStatus.innerHTML;
-  document.getElementById('modal-settings').classList.add('open');
-}
-
-function saveApiKey(){
-  const key = document.getElementById('settings-apikey').value.trim();
-  const fb = document.getElementById('apikey-feedback');
-  if(!key){ fb.style.color='var(--red)'; fb.textContent='Cole sua chave antes de salvar.'; return; }
-  if(!key.startsWith('sk-ant-')){ fb.style.color='var(--amber)'; fb.textContent='A chave deve começar com sk-ant- — verifique se copiou corretamente.'; return; }
-  localStorage.setItem(API_KEY_STORAGE, key);
-  fb.style.color='var(--green)'; fb.textContent='Chave salva com sucesso! Análise automática de editais ativa.';
-  updateApiKeyStatus();
-  showToast('Chave de API salva!');
-}
-
-function clearApiKey(){
-  if(!confirm('Remover a chave? A análise automática de editais será desativada.')) return;
-  localStorage.removeItem(API_KEY_STORAGE);
-  document.getElementById('settings-apikey').value='';
-  document.getElementById('apikey-feedback').style.color='var(--text2)';
-  document.getElementById('apikey-feedback').textContent='Chave removida.';
-  updateApiKeyStatus();
-  showToast('Chave removida');
-}
-
-function toggleApiKeyVisibility(){
-  const inp = document.getElementById('settings-apikey');
-  const icon = document.getElementById('toggle-vis-icon');
-  if(inp.type==='password'){ inp.type='text'; icon.className='ti ti-eye-off'; }
-  else { inp.type='password'; icon.className='ti ti-eye'; }
-}
-
-// testApiKey removido - usando proxy Netlify
-
-// Overwrite handlePdf to use the saved key
-async function handlePdf(input){
-  const file=input.files[0]; if(!file) return;
-  document.getElementById('upload-text').textContent='Lendo '+file.name+'...';
   const reader=new FileReader();
   reader.onload=async(e)=>{
-    pdfB64=e.target.result.split(',')[1];
-    document.getElementById('upload-text').textContent='Analisando com IA...';
-    document.getElementById('ai-status-area').style.display='flex';
-    document.getElementById('ai-status-text').textContent='Analisando edital...';
-    try {
-      const resp=await fetch('/api/analyze-edital',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({pdfBase64:pdfB64})
-      });
+    const b64=e.target.result.split(',')[1];
+    prog.innerHTML=`<div class="imp-progress">
+      <div class="imp-step step-done"><i class="ti ti-check"></i> PDF lido com sucesso</div>
+      <div class="imp-step step-active"><i class="ti ti-robot"></i> Claude está analisando todos os imóveis do edital...</div>
+      <div class="imp-step step-wait"><i class="ti ti-database"></i> Aguardando extração</div>
+    </div>`;
+    try{
+      const resp=await fetch('/api/analyze-edital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfBase64:b64,mode:'bulk'})});
       const data=await resp.json();
-      if(!resp.ok||data.error){ throw new Error(data.error||'Erro'); }
-      const text=data.analysis||'';
-      if(text){
-        window._lastAI=text;
-        document.getElementById('ai-status-text').textContent='Análise concluída! Verifique e ajuste os campos abaixo.';
-        const pre=document.createElement('div');
-        pre.style.cssText='margin-top:8px;font-size:11px;max-height:180px;overflow-y:auto;background:var(--surface2);border-radius:var(--radius);padding:10px;white-space:pre-wrap;color:var(--text2);line-height:1.6';
-        pre.textContent=text;
-        document.getElementById('ai-status-area').appendChild(pre);
-        const lm=text.match(/lance\s*m[íi]nimo[:\s]+R?\$?\s*([\d.,]+)/i);
-        if(lm&&!document.getElementById('f-lance').value) document.getElementById('f-lance').value=Math.round(parseFloat(lm[1].replace(/\./g,'').replace(',','.')));
-        const am=text.match(/avalia[çc][ãa]o[:\s]+R?\$?\s*([\d.,]+)/i);
-        if(am&&!document.getElementById('f-aval').value) document.getElementById('f-aval').value=Math.round(parseFloat(am[1].replace(/\./g,'').replace(',','.')));
+      if(!resp.ok||data.error){
+        prog.innerHTML=`<div class="imp-progress"><div class="imp-step" style="color:var(--red)"><i class="ti ti-alert-circle"></i> Erro: ${data.error||'Falha na análise'}</div></div>`;
+        return;
       }
-    } catch(err){
-      document.getElementById('ai-status-text').textContent='Erro na análise ('+err.message+'). Preencha os campos manualmente.';
+      if(!data.imoveis?.length){
+        prog.innerHTML=`<div class="imp-progress"><div class="imp-step" style="color:var(--amb)"><i class="ti ti-alert-circle"></i> Nenhum imóvel encontrado no edital.</div></div>`;
+        return;
+      }
+      importData=data.imoveis;
+      prog.innerHTML=`<div class="imp-progress">
+        <div class="imp-step step-done"><i class="ti ti-check"></i> PDF lido</div>
+        <div class="imp-step step-done"><i class="ti ti-check"></i> ${data.count} imóveis extraídos</div>
+        <div class="imp-step step-active"><i class="ti ti-hand-click"></i> Selecione os imóveis para importar</div>
+      </div>`;
+      renderImportResults(data.imoveis);
+    }catch(err){
+      prog.innerHTML=`<div class="imp-progress"><div class="imp-step" style="color:var(--red)"><i class="ti ti-alert-circle"></i> Erro de conexão. Verifique se a ANTHROPIC_API_KEY está configurada no Vercel.</div></div>`;
     }
-    document.getElementById('upload-text').textContent=file.name+' ✓';
   };
   reader.readAsDataURL(file);
 }
 
-async function testProxy(){
-  const fb=document.getElementById('apikey-feedback');
-  fb.style.color='var(--text2)'; fb.textContent='Testando...';
-  try {
+function renderImportResults(lista){
+  const res=document.getElementById('imp-results');
+  res.style.display='block';
+  res.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:500">${lista.length} imóveis encontrados</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="selAll(true)"><i class="ti ti-check-all"></i> Selecionar todos</button>
+        <button class="btn" onclick="selAll(false)">Limpar seleção</button>
+      </div>
+    </div>
+    <div class="imp-cards" id="imp-cards">
+      ${lista.map((im,i)=>`
+        <div class="imp-card sel" id="imp-c-${i}" onclick="toggleSel(${i})">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:4px">
+            <div class="imp-card-t">Lote ${im.lote} — ${im.titulo}</div>
+            <i class="ti ti-check-circle" id="imp-chk-${i}" style="color:var(--grn);flex-shrink:0;font-size:16px"></i>
+          </div>
+          <div class="imp-card-addr"><i class="ti ti-map-pin" style="font-size:11px"></i> ${im.endereco}</div>
+          <div class="imp-card-row"><span style="color:var(--tx2)">Lance 1º</span><span style="font-weight:500;color:var(--grn)">${fR(im.lance1||0)}</span></div>
+          <div class="imp-card-row"><span style="color:var(--tx2)">Lance 2º</span><span>${fR(im.lance2||0)}</span></div>
+          <div class="imp-card-row"><span style="color:var(--tx2)">Avaliação</span><span>${fR(im.avaliacao||0)}</span></div>
+          ${im.obs?`<div style="font-size:10px;color:var(--amb-tx);background:var(--amb-bg);border-radius:4px;padding:3px 6px;margin-top:4px">${im.obs.substring(0,60)}...</div>`:''}
+        </div>`).join('')}
+    </div>
+    <div class="imp-sel-bar">
+      <div style="font-size:13px;color:var(--tx2)"><span id="sel-count">${lista.length}</span> selecionados</div>
+      <button class="btn grn" style="margin-left:auto" onclick="importSelected()"><i class="ti ti-database-import"></i> Importar selecionados para o Firebase</button>
+    </div>`;
+  window._selImport=new Set(lista.map((_,i)=>i));
+}
+
+function toggleSel(i){
+  const s=window._selImport;
+  if(s.has(i)){s.delete(i);document.getElementById('imp-c-'+i).classList.remove('sel');document.getElementById('imp-chk-'+i).style.color='var(--tx3)';}
+  else{s.add(i);document.getElementById('imp-c-'+i).classList.add('sel');document.getElementById('imp-chk-'+i).style.color='var(--grn)';}
+  document.getElementById('sel-count').textContent=s.size;
+}
+
+function selAll(v){
+  importData.forEach((_,i)=>{
+    if(v){window._selImport.add(i);document.getElementById('imp-c-'+i)?.classList.add('sel');const chk=document.getElementById('imp-chk-'+i);if(chk)chk.style.color='var(--grn)';}
+    else{window._selImport.delete(i);document.getElementById('imp-c-'+i)?.classList.remove('sel');const chk=document.getElementById('imp-chk-'+i);if(chk)chk.style.color='var(--tx3)';}
+  });
+  document.getElementById('sel-count').textContent=window._selImport.size;
+}
+
+async function importSelected(){
+  const sel=Array.from(window._selImport).map(i=>importData[i]);
+  if(!sel.length){showToast('Selecione ao menos um imóvel');return;}
+  const btn=document.querySelector('.btn.grn');btn.disabled=true;btn.textContent='Importando...';
+  let ok=0,err=0;
+  for(const im of sel){
+    try{
+      const id='lote_'+im.lote+'_'+Date.now();
+      await saveDoc(id,{
+        id,
+        titulo:`Lote ${im.lote} — ${im.titulo}`,
+        endereco:im.endereco||'',
+        lance:im.lance1||0,
+        avaliacao:im.avaliacao||0,
+        tipo:im.tipo||'Apartamento',
+        modalidade:im.modalidade||'Leilão SFI — Edital Único',
+        status:'ativo',
+        leiloeiro:im.leiloeiro||'',
+        link:im.link||'https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp',
+        sessions:[
+          ...(im.data1?[{order:1,label:'1ª sessão',date:im.data1}]:[]),
+          ...(im.data2?[{order:2,label:'2ª sessão',date:im.data2}]:[])
+        ],
+        obs:im.obs||'',
+        favorito:false,
+        updatedAt:new Date().toISOString()
+      });
+      ok++;
+    }catch{err++;}
+  }
+  btn.disabled=false;btn.textContent='Importar selecionados para o Firebase';
+  showToast(`${ok} imóvel${ok!==1?'is':''} importado${ok!==1?'s':''}!${err?` (${err} erros)`:''}`);
+  if(ok>0){showTab('cards',document.getElementById('nav-cards'));}
+}
+
+// ── Settings & Utils ─────────────────────────────────────────────
+async function testServer(){
+  const fb=document.getElementById('cfg-feedback');
+  fb.style.color='var(--tx2)';fb.textContent='Testando...';
+  try{
     const r=await fetch('/api/analyze-edital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfBase64:'test'})});
     const d=await r.json();
-    if(r.status===400){ fb.style.color='var(--green)'; fb.textContent='Servidor OK! Configure ANTHROPIC_API_KEY no Netlify para ativar a IA.'; }
-    else if(r.status===500&&d.error?.includes('ANTHROPIC_API_KEY')){ fb.style.color='var(--amber)'; fb.textContent='Servidor OK — falta configurar ANTHROPIC_API_KEY no Netlify.'; }
-    else if(r.ok){ fb.style.color='var(--green)'; fb.textContent='Tudo funcionando! Analise de editais ativa.'; }
-    else { fb.style.color='var(--amber)'; fb.textContent='Resposta: '+JSON.stringify(d).substring(0,80); }
-  } catch(e){ fb.style.color='var(--red)'; fb.textContent='Servidor nao encontrado. Faca o deploy no Netlify primeiro.'; }
+    if(r.status===400){fb.style.color='var(--grn)';fb.textContent='✓ Servidor OK! ANTHROPIC_API_KEY configurada e funcionando.';}
+    else if(r.status===500&&d.error?.includes('ANTHROPIC_API_KEY')){fb.style.color='var(--amb)';fb.textContent='Servidor OK, mas ANTHROPIC_API_KEY não configurada no Vercel ainda.';}
+    else{fb.style.color='var(--amb)';fb.textContent='Resposta: '+JSON.stringify(d).substring(0,80);}
+  }catch{fb.style.color='var(--red)';fb.textContent='Servidor não encontrado — verifique o deploy.';}
 }
-updateApiKeyStatus();
+
+function setF(f,btn){filtro=f;document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderCards();}
+function setQF(f){filtro=f;showTab('cards',document.getElementById('nav-cards'));}
+
+function showTab(tab,btn){
+  ['cards','favoritos','alarmes','cron','roi','importar'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+    document.getElementById('nav-'+t)?.classList.toggle('on',t===tab);
+  });
+  if(tab==='cron')renderCron();
+  if(tab==='alarmes')renderAlarmes();
+  if(tab==='favoritos')renderFavoritos();
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function toggleTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+document.querySelectorAll('.modal-wrap').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+const iu=document.getElementById('imp-upload-area');
+iu.addEventListener('dragover',e=>{e.preventDefault();iu.style.borderColor='var(--blu)';});
+iu.addEventListener('dragleave',()=>iu.style.borderColor='');
+iu.addEventListener('drop',e=>{e.preventDefault();iu.style.borderColor='';const f=e.dataTransfer.files[0];if(f?.type==='application/pdf'){const dt=new DataTransfer();dt.items.add(f);const inp=document.getElementById('imp-pdf');inp.files=dt.files;handleImport(inp);}});
+
+function calcROI(){
+  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const l=g('rl'),it=l*g('ri')/100,rg=g('rr'),db=g('rd'),cm=g('rc'),rf=g('rfo');
+  const ms=parseInt(document.getElementById('rm')?.value)||8,carr=(g('rip')+g('rco'))*ms;
+  const ct=l+it+rg+db+cm+rf+carr,vd=g('rv'),ci=vd*g('rci')/100;
+  const gn=vd-l,is=document.getElementById('ris')?.value==='s';
+  const ir=is?0:Math.max(0,gn*g('rir')/100);
+  const rec=vd-ci-ir,luc=rec-ct,roi=ct>0?(luc/ct)*100:0,roiA=ms>0?roi/ms*12:0;
+  const isG=luc>0&&roi>10,isO=luc>0;
+  const vbg=isG?'var(--grn-bg)':(isO?'var(--amb-bg)':'var(--red-bg)');
+  const vtx=isG?'var(--grn-tx)':(isO?'var(--amb-tx)':'var(--red-tx)');
+  const vic=isG?'ti-circle-check':(isO?'ti-alert-circle':'ti-circle-x)');
+  const vtit=isG?'Bom potencial':(isO?'Retorno modesto':'Prejuízo projetado');
+  document.getElementById('roi-res').innerHTML=`
+    <div class="verd" style="background:${vbg}"><i class="ti ${vic}" style="color:${vtx}"></i><div><div class="verd-t" style="color:${vtx}">${vtit}</div><div class="verd-s" style="color:${vtx}">ROI ${pct(roi)} em ${ms}m · ${pct(roiA)}/ano</div></div></div>
+    <div class="roi-mets">
+      <div class="roi-m"><div class="roi-ml">Custo total</div><div class="roi-mv" style="color:var(--red)">${fR(ct)}</div></div>
+      <div class="roi-m"><div class="roi-ml">Lucro líquido</div><div class="roi-mv" style="color:${luc>=0?'var(--grn)':'var(--red)'}">${fR(luc)}</div></div>
+      <div class="roi-m"><div class="roi-ml">ROI/ano</div><div class="roi-mv" style="color:${roiA>=0?'var(--grn)':'var(--red)'}">${pct(roiA)}</div></div>
+    </div>
+    <div class="roi-sec"><div class="roi-t">Breakdown</div>
+      <div class="bdr"><span>Lance</span><span style="color:var(--red)">${fR(l)}</span></div>
+      <div class="bdr"><span>ITBI (${g('ri')}%)</span><span style="color:var(--red)">${fR(it)}</span></div>
+      <div class="bdr"><span>Registro</span><span style="color:var(--red)">${fR(rg)}</span></div>
+      ${db?`<div class="bdr"><span>Débitos</span><span style="color:var(--red)">${fR(db)}</span></div>`:''}
+      ${cm?`<div class="bdr"><span>Comissão leiloeiro</span><span style="color:var(--red)">${fR(cm)}</span></div>`:''}
+      <div class="bdr"><span>Reforma</span><span style="color:var(--red)">${fR(rf)}</span></div>
+      <div class="bdr"><span>Carregamento (${ms}m)</span><span style="color:var(--red)">${fR(carr)}</span></div>
+      <div class="bdr"><span>Preço de venda</span><span style="color:var(--grn)">+${fR(vd)}</span></div>
+      <div class="bdr"><span>Comissão imob.</span><span style="color:var(--red)">${fR(ci)}</span></div>
+      <div class="bdr"><span>IR${is?' (isento)':''}</span><span style="color:var(--red)">${fR(ir)}</span></div>
+      <div class="bdr"><span>Lucro líquido</span><span style="color:${luc>=0?'var(--grn)':'var(--red)'}">${luc>=0?'+':''}${fR(luc)}</span></div>
+    </div>`;
+}
 </script>
-
-<!-- Modal: Configurações -->
-<div class="modal-overlay" id="modal-settings">
-  <div class="modal" style="max-width:480px">
-    <button class="modal-close" onclick="closeModal('modal-settings')"><i class="ti ti-x"></i></button>
-    <div class="modal-title"><i class="ti ti-settings" style="font-size:18px;vertical-align:-3px;margin-right:6px"></i>Configurações</div>
-    <div style="background:var(--blue-bg);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--blue-text);margin-bottom:16px;line-height:1.7;">
-      <strong>A chave fica no Netlify — configuração única:</strong><br>
-      1. Acesse <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blue)">console.anthropic.com/settings/keys</a> → crie uma chave<br>
-      2. No Netlify: <strong>Site configuration → Environment variables → Add variable</strong><br>
-      3. Nome: <code style="font-family:monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">ANTHROPIC_API_KEY</code> · Valor: sua chave <code style="font-family:monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">sk-ant-...</code><br>
-      4. Clique em <strong>Deploy</strong> para aplicar
-    </div>
-    <div id="apikey-feedback" style="font-size:12px;margin-bottom:10px;min-height:18px;"></div>
-    <button class="btn primary" onclick="testProxy()" style="width:100%;justify-content:center"><i class="ti ti-plug"></i> Testar conexão com servidor</button>
-    <div style="border-top:0.5px solid var(--border);margin-top:18px;padding-top:14px;">
-      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Status da conexão</div>
-      <div id="firebase-conn-detail" style="font-size:12px;color:var(--text2)"></div>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
