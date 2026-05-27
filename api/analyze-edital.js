@@ -15,6 +15,8 @@ module.exports = async function handler(req, res) {
     ? `Você é um especialista em leilões de imóveis no Brasil. Analise este trecho do edital e extraia TODOS os imóveis listados neste trecho. Responda APENAS com um array JSON válido, sem texto antes ou depois, sem markdown, sem blocos de código. Se não houver imóveis neste trecho, responda com []. Formato: [{"lote":"180","titulo":"Casa 67,5m²","endereco":"Rua X, bairro, cidade/PE","tipo":"Casa","lance1":155000,"lance2":147325,"avaliacao":155000,"data1":"2026-07-06","data2":"2026-07-10","leiloeiro":"Fernando C. Moreira Filho — mgl.com.br","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp","matricula":"5530","obs":"débitos, riscos, gravames","modalidade":"Leilão SFI — Edital Único"}]`
     : `Analise este edital de leilão. Extraia: 1) Imóvel: tipo, endereço, área 2) Valores: lance 1ª e 2ª praça, avaliação 3) Datas das sessões 4) Pagamento 5) Débitos 6) Situação 7) Leiloeiro 8) Riscos. Use bullet points.`;
 
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
   async function splitPdf(b64, startPage, endPage) {
     const { PDFDocument } = await import('pdf-lib');
     const pdfBytes = Buffer.from(b64, 'base64');
@@ -35,7 +37,7 @@ module.exports = async function handler(req, res) {
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 8000,
+        max_tokens: 4000,
         messages: [{ role: 'user', content: [
           { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
           { type: 'text', text: prompt }
@@ -48,25 +50,25 @@ module.exports = async function handler(req, res) {
 
   try {
     if (mode === 'bulk') {
-      // Split into 3 parts of ~47 pages each
-      const [p1, p2, p3] = await Promise.all([
-        splitPdf(pdfBase64, 0, 46),
-        splitPdf(pdfBase64, 47, 93),
-        splitPdf(pdfBase64, 94, 141)
-      ]);
-
-      const [r1, r2, r3] = await Promise.all([
-        callClaude(p1),
-        callClaude(p2),
-        callClaude(p3)
-      ]);
-
-      for (const r of [r1, r2, r3]) {
-        if (!r.ok) return res.status(r.status).json({ error: r.data.error?.message || 'Erro na API' });
-      }
-
+      // Split into 3 parts sequentially to avoid rate limits
       let imoveis = [];
-      for (const r of [r1, r2, r3]) {
+
+      const parts = [
+        { start: 0, end: 46 },
+        { start: 47, end: 93 },
+        { start: 94, end: 141 }
+      ];
+
+      for (let i = 0; i < parts.length; i++) {
+        const { start, end } = parts[i];
+        const partB64 = await splitPdf(pdfBase64, start, end);
+        
+        // Wait 3 seconds between requests to respect rate limit
+        if (i > 0) await sleep(3000);
+        
+        const r = await callClaude(partB64);
+        if (!r.ok) return res.status(r.status).json({ error: `Erro na parte ${i+1}: ${r.data.error?.message || 'Erro na API'}` });
+
         const text = r.data.content?.map(c => c.text || '').join('\n') || '';
         try {
           const clean = text.replace(/```json|```/g, '').trim();
