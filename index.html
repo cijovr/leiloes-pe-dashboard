@@ -661,7 +661,13 @@ async function splitPdfBrowser(b64, startPage, endPage) {
   const pages = await newDoc.copyPages(srcDoc, indices);
   pages.forEach(p => newDoc.addPage(p));
   const newBytes = await newDoc.save();
-  return btoa(String.fromCharCode(...newBytes));
+  // Safe base64 encoding for large files
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < newBytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...newBytes.slice(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 function setStep(steps) {
