@@ -775,7 +775,8 @@ async function handleImport(input){
             catch(e) { data = { error: 'Timeout' }; }
           } catch(e) { data = { error: e.message }; }
 
-          if (data?.error?.includes('rate limit') || data?.error?.includes('rate_limit')) {
+          const errMsg = typeof data?.error === 'string' ? data.error : JSON.stringify(data?.error||'');
+          if (errMsg.includes('rate limit') || errMsg.includes('rate_limit')) {
             if (attempts < 3) {
               for (let t = 65; t > 0; t--) {
                 await new Promise(r => setTimeout(r, 1000));
