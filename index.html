@@ -788,7 +788,8 @@ async function handleImport(input){
           console.log(`Parte ${i+1} resposta raw:`, data.raw);
         }
 
-        if (i < parts.length - 1) await new Promise(r => setTimeout(r, 500));
+        // Wait 3s between parts to respect rate limit (30k tokens/min)
+        if (i < parts.length - 1) await new Promise(r => setTimeout(r, 3000));
       }
 
       if (!allImoveis.length) {
