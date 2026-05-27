@@ -209,6 +209,7 @@ window.dispatchEvent(new Event('firebase-ready'));
   <button class="nav-item" onclick="showTab('alarmes',this)" id="nav-alarmes"><i class="ti ti-bell"></i>Alarmes <span id="alarm-count-badge"></span></button>
   <button class="nav-item" onclick="showTab('cron',this)" id="nav-cron"><i class="ti ti-calendar"></i>Cronograma</button>
   <button class="nav-item" onclick="showTab('roi',this)" id="nav-roi"><i class="ti ti-chart-line"></i>Calculadora ROI</button>
+  <button class="nav-item" onclick="showTab('roi-favs',this)" id="nav-roi-favs"><i class="ti ti-bookmark"></i>ROIs salvos <span id="roi-fav-badge"></span></button>
   <div class="nav-sec">Importar</div>
   <button class="nav-item" onclick="showTab('importar',this)" id="nav-importar"><i class="ti ti-file-upload"></i>Importar Edital</button>
   <div class="nav-sec">Edital ativo</div>
@@ -308,7 +309,16 @@ window.dispatchEvent(new Event('firebase-ready'));
 
 <!-- TAB: ROI -->
 <div id="tab-roi" style="display:none">
-  <div class="topbar"><div><div class="page-title">Calculadora ROI</div><div class="page-sub">Simule o retorno do investimento</div></div></div>
+  <div class="topbar">
+    <div>
+      <div class="page-title">Calculadora ROI</div>
+      <div class="page-sub">Simule o retorno do investimento</div>
+      <div id="roi-lote-label" style="font-size:12px;color:var(--grn);margin-top:4px;font-weight:500"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveROIFav()" class="btn" id="btn-save-roi"><i class="ti ti-bookmark"></i> Salvar simulação</button>
+    </div>
+  </div>
   <div class="roi-grid">
     <div>
       <div class="roi-sec"><div class="roi-t">Arremate</div>
@@ -373,6 +383,12 @@ window.dispatchEvent(new Event('firebase-ready'));
     </div>
     <div id="roi-res"></div>
   </div>
+</div>
+
+<!-- TAB: ROI Favoritos -->
+<div id="tab-roi-favs" style="display:none">
+  <div class="topbar"><div><div class="page-title">ROIs salvos</div><div class="page-sub">Simulações de retorno salvas</div></div></div>
+  <div id="roi-favs-content"></div>
 </div>
 
 <!-- TAB: Importar -->
@@ -1128,14 +1144,123 @@ async function testServer(){
 function setF(f,btn){filtro=f;document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderCards();}
 function setQF(f){filtro=f;showTab('cards',document.getElementById('nav-cards'));}
 
+// ROI Favorites storage key
+const ROI_FAVS_KEY = 'leiloes_roi_favs';
+
+function getRoiFavs(){ try{return JSON.parse(localStorage.getItem(ROI_FAVS_KEY)||'[]');}catch{return[];} }
+function saveRoiFavs(favs){ localStorage.setItem(ROI_FAVS_KEY, JSON.stringify(favs)); updateRoiFavBadge(); }
+
+function updateRoiFavBadge(){
+  const n = getRoiFavs().length;
+  const el = document.getElementById('roi-fav-badge');
+  if(el) el.innerHTML = n>0?`<span style="background:var(--grn);color:#fff;font-size:10px;padding:1px 5px;border-radius:20px;margin-left:4px">${n}</span>`:'';
+}
+
+function saveROIFav(){
+  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const loteLabel = document.getElementById('roi-lote-label')?.textContent||'Simulação manual';
+  const fav = {
+    id: 'roi_'+Date.now(),
+    loteLabel,
+    loteId: window._roiLoteId||'',
+    savedAt: new Date().toISOString(),
+    inputs: {
+      rl: g('rl'), rl1: g('rl1'), rl2: g('rl2'), ra: g('ra'),
+      ri: g('ri'), rr: g('rr'), rd: g('rd'), rf: g('rfo'),
+      rip: g('rip'), rco: g('rco'), rm: parseInt(document.getElementById('rm')?.value)||8,
+      rv: g('rv'), rci: g('rci'), rir: g('rir'),
+      ris: document.getElementById('ris')?.value||'n',
+      rcPct: document.getElementById('rc-pct')?.value||'5',
+      roiQual: document.getElementById('roi-qual')?.value||'1',
+      benchRate: g('bench-rate'),
+      obs: document.getElementById('roi-obs')?.value||''
+    }
+  };
+  const favs = getRoiFavs();
+  favs.unshift(fav);
+  saveRoiFavs(favs);
+  showToast('Simulação salva!');
+  updateRoiFavBadge();
+}
+
+function loadROIFav(id){
+  const fav = getRoiFavs().find(f=>f.id===id);
+  if(!fav) return;
+  const s = fav.inputs;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set('rl',s.rl); set('rl1',s.rl1); set('rl2',s.rl2); set('ra',s.ra);
+  set('ri',s.ri); set('rr',s.rr); set('rd',s.rd); set('rfo',s.rf);
+  set('rip',s.rip); set('rco',s.rco); set('rv',s.rv); set('rci',s.rci); set('rir',s.rir);
+  set('rm',s.rm); set('bench-rate',s.benchRate||12);
+  if(document.getElementById('ris')) document.getElementById('ris').value=s.ris;
+  if(document.getElementById('rc-pct')) document.getElementById('rc-pct').value=s.rcPct||'5';
+  if(document.getElementById('roi-qual')) document.getElementById('roi-qual').value=s.roiQual||'1';
+  if(document.getElementById('roi-obs')) document.getElementById('roi-obs').value=s.obs||'';
+  if(document.getElementById('rmo')) document.getElementById('rmo').textContent=s.rm+'m';
+  if(document.getElementById('roi-lote-label')) document.getElementById('roi-lote-label').textContent=fav.loteLabel;
+  window._roiLoteId = fav.loteId;
+  calcROI();
+  showTab('roi', document.getElementById('nav-roi'));
+  showToast('Simulação carregada!');
+}
+
+function deleteROIFav(id){
+  if(!confirm('Remover esta simulação?')) return;
+  saveRoiFavs(getRoiFavs().filter(f=>f.id!==id));
+  renderRoiFavs();
+  showToast('Removida!');
+}
+
+function renderRoiFavs(){
+  const favs = getRoiFavs();
+  const el = document.getElementById('roi-favs-content');
+  if(!el) return;
+  if(!favs.length){
+    el.innerHTML='<div class="empty"><i class="ti ti-bookmark-off"></i><div class="empty-t">Nenhuma simulação salva</div><div class="empty-s">Vá para a Calculadora ROI e clique em "Salvar simulação"</div></div>';
+    return;
+  }
+  el.innerHTML = favs.map(fav=>{
+    const s = fav.inputs;
+    const l = s.roiQual==='2'?s.rl2:s.rl1||s.rl;
+    const ct = l + l*s.ri/100 + s.rr + s.rd + Math.round(l*parseFloat(s.rcPct||5)/100) + s.rf + (s.rip+s.rco)*s.rm;
+    const gn = s.rv - l;
+    const ir = s.ris==='s'?0:Math.max(0,gn*s.rir/100);
+    const rec = s.rv - s.rv*s.rci/100 - ir;
+    const luc = rec - ct;
+    const roi = ct>0?(luc/ct)*100:0;
+    const roiA = s.rm>0?roi/s.rm*12:0;
+    const dt = new Date(fav.savedAt).toLocaleDateString('pt-BR');
+    return `<div style="background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--rl);padding:.9rem 1rem;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:500">${fav.loteLabel||'Simulação'}</div>
+          <div style="font-size:11px;color:var(--tx3)">Salvo em ${dt} · ${s.roiQual==='2'?'2º':'1º'} leilão</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="loadROIFav('${fav.id}')" class="btn" style="font-size:11px;padding:5px 10px"><i class="ti ti-edit"></i> Editar</button>
+          <button onclick="deleteROIFav('${fav.id}')" class="btn" style="font-size:11px;padding:5px 8px;color:var(--red)"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+        <div style="background:var(--sur2);border-radius:var(--r);padding:6px 8px"><div style="font-size:10px;color:var(--tx3)">Lance</div><div style="font-size:13px;font-weight:500">${fR(l)}</div></div>
+        <div style="background:var(--sur2);border-radius:var(--r);padding:6px 8px"><div style="font-size:10px;color:var(--tx3)">Lucro</div><div style="font-size:13px;font-weight:500;color:${luc>=0?'var(--grn)':'var(--red)'}">${fR(luc)}</div></div>
+        <div style="background:var(--sur2);border-radius:var(--r);padding:6px 8px"><div style="font-size:10px;color:var(--tx3)">ROI total</div><div style="font-size:13px;font-weight:500;color:${roi>=0?'var(--grn)':'var(--red)'}">${pct(roi)}</div></div>
+        <div style="background:var(--sur2);border-radius:var(--r);padding:6px 8px"><div style="font-size:10px;color:var(--tx3)">ROI/ano</div><div style="font-size:13px;font-weight:500;color:${roiA>=0?'var(--grn)':'var(--red)'}">${pct(roiA)}</div></div>
+      </div>
+      ${s.obs?`<div style="margin-top:8px;font-size:12px;color:var(--tx2);background:var(--sur2);border-radius:var(--r);padding:7px 10px">${s.obs}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
 function showTab(tab,btn){
-  ['cards','favoritos','alarmes','cron','roi','importar'].forEach(t=>{
+  ['cards','favoritos','alarmes','cron','roi','roi-favs','importar'].forEach(t=>{
     document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
     document.getElementById('nav-'+t)?.classList.toggle('on',t===tab);
   });
   if(tab==='cron')renderCron();
   if(tab==='alarmes')renderAlarmes();
   if(tab==='favoritos')renderFavoritos();
+  if(tab==='roi-favs')renderRoiFavs();
 }
 
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -1180,6 +1305,9 @@ function abrirROI(id){
   if(im.lance2) document.getElementById('roi-qual').innerHTML = `<option value="1">1º Leilão — ${fR(im.lance)}</option><option value="2">2º Leilão — ${fR(im.lance2)}</option>`;
   calcROI();
   showTab('roi', document.getElementById('nav-roi'));
+  window._roiLoteId = im.id;
+  if(document.getElementById('roi-lote-label')) document.getElementById('roi-lote-label').textContent = '📍 '+im.titulo?.substring(0,50);
+  if(document.getElementById('roi-obs')) document.getElementById('roi-obs').value = im.obs||'';
   showToast('ROI: '+im.titulo?.substring(0,40));
 }
 
@@ -1202,6 +1330,14 @@ function calcROI(){
   const vtx=isG?'var(--grn-tx)':(isO?'var(--amb-tx)':'var(--red-tx)');
   const vic=isG?'ti-circle-check':(isO?'ti-alert-circle':'ti-circle-x)');
   const vtit=isG?'Bom potencial':(isO?'Retorno modesto':'Prejuízo projetado');
+  // Benchmark calculation
+  const benchRate = parseFloat(document.getElementById('bench-rate')?.value||'12')/100;
+  const ms2 = parseInt(document.getElementById('rm')?.value)||8;
+  const capitalInvestido = ct; // custo total como capital investido
+  const rendBench = Math.round(capitalInvestido * Math.pow(1 + benchRate, ms2/12) - capitalInvestido);
+  const roiBench = benchRate * 100;
+  const superaBench = luc > rendBench;
+
   document.getElementById('roi-res').innerHTML=`
     <div class="verd" style="background:${vbg}"><i class="ti ${vic}" style="color:${vtx}"></i><div><div class="verd-t" style="color:${vtx}">${vtit}</div><div class="verd-s" style="color:${vtx}">ROI ${pct(roi)} em ${ms}m · ${pct(roiA)}/ano</div></div></div>
     <div class="roi-mets">
@@ -1221,6 +1357,27 @@ function calcROI(){
       <div class="bdr"><span>Comissão imob.</span><span style="color:var(--red)">${fR(ci)}</span></div>
       <div class="bdr"><span>IR${is?' (isento)':''}</span><span style="color:var(--red)">${fR(ir)}</span></div>
       <div class="bdr"><span>Lucro líquido</span><span style="color:${luc>=0?'var(--grn)':'var(--red)'}">${luc>=0?'+':''}${fR(luc)}</span></div>
+    </div>
+    <div id="bench-result" style="margin-top:8px;background:${superaBench?'var(--grn-bg)':'var(--red-bg)'};border-radius:var(--r);padding:8px 12px;font-size:12px;color:${superaBench?'var(--grn-tx)':'var(--red-tx)'}">
+      <div style="font-weight:500;margin-bottom:4px"><i class="ti ti-trending-up" style="font-size:13px"></i> Benchmark ${(parseFloat(document.getElementById('bench-rate')?.value||'12'))}% a.a. em ${ms2} meses</div>
+      <div style="display:flex;justify-content:space-between">
+        <span>Renda fixa renderia:</span><span style="font-weight:500">${fR(rendBench)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px">
+        <span>Seu lucro vs benchmark:</span><span style="font-weight:500">${superaBench?'+'+fR(luc-rendBench)+' acima ✓':fR(luc-rendBench)+' abaixo ✗'}</span>
+      </div>
+    </div>
+    <div style="margin-top:10px;background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--rl);padding:.9rem 1rem;">
+      <div class="roi-t">Benchmark — comparativo com renda fixa</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <label style="font-size:12px;color:var(--tx2)">Taxa benchmark (% a.a.)</label>
+        <input type="number" id="bench-rate" value="12" step="0.5" oninput="calcROI()" style="width:80px;font-family:var(--f);font-size:13px;border:0.5px solid var(--brd2);border-radius:var(--r);background:var(--sur);color:var(--tx);padding:5px 8px;">
+      </div>
+      <div id="bench-result"></div>
+    </div>
+    <div style="margin-top:10px;background:var(--sur);border:0.5px solid var(--brd);border-radius:var(--rl);padding:.9rem 1rem;">
+      <div class="roi-t">Observações</div>
+      <textarea id="roi-obs" placeholder="Anote aqui suas observações sobre este investimento..." style="width:100%;min-height:80px;resize:vertical;font-family:var(--f);font-size:13px;border:0.5px solid var(--brd2);border-radius:var(--r);background:var(--sur);color:var(--tx);padding:8px 10px;line-height:1.6"></textarea>
     </div>`;
 }
 </script>
