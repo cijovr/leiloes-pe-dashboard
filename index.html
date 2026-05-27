@@ -196,7 +196,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window._db = db;
-window._fs = { collection, doc, setDoc, deleteDoc, query, orderBy, writeBatch };
+window._fs = { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, writeBatch };
 window._col = "imoveis";
 window.dispatchEvent(new Event('firebase-ready'));
 </script>
