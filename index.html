@@ -335,8 +335,18 @@ window.dispatchEvent(new Event('firebase-ready'));
         </div>
         <div class="frow" style="margin-bottom:8px">
           <div><label class="fl">Débitos (R$)</label><input class="fi" type="number" id="rd" value="0" oninput="calcROI()"></div>
-          <div><label class="fl">Comissão leiloeiro (R$)</label><input class="fi" type="number" id="rc" value="0" oninput="calcROI()"></div>
+          <div><label class="fl">Comissão leiloeiro</label>
+            <select class="fi" id="rc-pct" onchange="calcROI()">
+              <option value="5">5% (padrão)</option>
+              <option value="3">3%</option>
+              <option value="0">Isento</option>
+            </select>
+          </div>
         </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:8px;background:var(--sur2);border-radius:var(--r);padding:6px 10px;">
+          <i class="ti ti-info-circle" style="font-size:12px"></i> Comissão calculada automaticamente sobre o lance arrematado: <strong id="rc-valor">R$ 0</strong>
+        </div>
+        <input type="hidden" id="rc" value="0">
         <label class="fl">Reforma (R$)</label><input class="fi" type="number" id="rfo" value="20000" oninput="calcROI()">
       </div>
       <div class="roi-sec"><div class="roi-t">Carregamento</div>
@@ -1162,7 +1172,7 @@ function abrirROI(id){
   document.getElementById('ra').value = im.avaliacao||0;
   document.getElementById('rr').value = 1500;
   document.getElementById('rd').value = 0;
-  document.getElementById('rc').value = Math.round((im.lance||0)*0.05);
+  // comissão calculada automaticamente
   document.getElementById('rfo').value = 20000;
   document.getElementById('rv').value = Math.round((im.avaliacao||im.lance||0)*1.1);
   document.getElementById('roi-qual').value = '1';
@@ -1175,7 +1185,13 @@ function abrirROI(id){
 
 function calcROI(){
   const g=id=>parseFloat(document.getElementById(id)?.value)||0;
-  const l=g('rl'),it=l*g('ri')/100,rg=g('rr'),db=g('rd'),cm=g('rc'),rf=g('rfo');
+  const l=g('rl');
+  // Auto-calculate leiloeiro commission
+  const rcPct = parseFloat(document.getElementById('rc-pct')?.value||'5');
+  const cm = Math.round(l * rcPct / 100);
+  if(document.getElementById('rc')) document.getElementById('rc').value = cm;
+  if(document.getElementById('rc-valor')) document.getElementById('rc-valor').textContent = 'R$ '+cm.toLocaleString('pt-BR');
+  const it=l*g('ri')/100,rg=g('rr'),db=g('rd'),rf=g('rfo');
   const ms=parseInt(document.getElementById('rm')?.value)||8,carr=(g('rip')+g('rco'))*ms;
   const ct=l+it+rg+db+cm+rf+carr,vd=g('rv'),ci=vd*g('rci')/100;
   const gn=vd-l,is=document.getElementById('ris')?.value==='s';
