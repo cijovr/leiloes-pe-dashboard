@@ -1,3 +1,56 @@
+import { Buffer } from 'buffer';
+
+// Extract text from PDF using pdf-parse via dynamic import workaround
+async function extractPdfText(base64Data) {
+  const pdfBuffer = Buffer.from(base64Data, 'base64');
+  
+  // Use pdf2json via fetch to a simple text extraction
+  // We'll parse the PDF manually looking for text streams
+  const bytes = new Uint8Array(pdfBuffer);
+  let text = '';
+  
+  // Simple PDF text extraction - find text between BT and ET markers
+  const pdfStr = pdfBuffer.toString('latin1');
+  
+  // Extract text using regex patterns common in PDFs
+  const btEtRegex = /BT([\s\S]*?)ET/g;
+  const tjRegex = /\[(.*?)\]\s*TJ/g;
+  const tfRegex = /\((.*?)\)\s*Tj/g;
+  
+  let match;
+  
+  // Method 1: Extract Tj strings
+  while ((match = tfRegex.exec(pdfStr)) !== null) {
+    const extracted = match[1]
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\t/g, '\t')
+      .replace(/\\\(/g, '(')
+      .replace(/\\\)/g, ')')
+      .replace(/\\\\/g, '\\');
+    text += extracted + ' ';
+  }
+  
+  // If not enough text, try TJ arrays
+  if (text.length < 500) {
+    text = '';
+    const btMatches = pdfStr.match(/BT[\s\S]*?ET/g) || [];
+    for (const bt of btMatches) {
+      const tjMatches = bt.match(/\(([^)]*)\)/g) || [];
+      for (const tj of tjMatches) {
+        const content = tj.slice(1, -1)
+          .replace(/\\n/g, '\n')
+          .replace(/\\r/g, ' ')
+          .replace(/\\\(/g, '(')
+          .replace(/\\\)/g, ')');
+        text += content + ' ';
+      }
+    }
+  }
+  
+  return text.trim();
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -40,24 +93,60 @@ Extraia TODOS os imóveis do edital. Não resuma, não pule nenhum. Inclua todas
     : `Analise este edital de leilão. Extraia: 1) Imóvel: tipo, endereço, área 2) Valores: lance 1ª e 2ª praça, avaliação 3) Datas das sessões 4) Pagamento: à vista/FGTS/financiamento 5) Débitos: IPTU, condomínio 6) Situação: ocupado/desocupado 7) Leiloeiro: nome, site, comissão 8) Riscos jurídicos. Use bullet points.`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Try with PDF first, fall back to text extraction if too many pages
+    let requestBody = {
+      model: 'claude-sonnet-4-5',
+      max_tokens: 8000,
+      messages: [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
+        { type: 'text', text: prompt }
+      ]}]
+    };
+
+    let response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 8000,
-        messages: [{ role: 'user', content: [
-          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
-          { type: 'text', text: prompt }
-        ]}]
-      })
+      body: JSON.stringify(requestBody)
     });
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // If PDF too large, extract text and send as text
+    if (!response.ok && data.error?.message?.includes('100 PDF pages')) {
+      console.log('PDF too large, extracting text...');
+      
+      const extractedText = await extractPdfText(pdfBase64);
+      
+      if (!extractedText || extractedText.length < 200) {
+        return res.status(400).json({ 
+          error: 'PDF tem mais de 100 páginas e não foi possível extrair o texto. Tente dividir o edital em partes menores.' 
+        });
+      }
+
+      // Retry with extracted text
+      requestBody = {
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: `${prompt}\n\nTEXTO DO EDITAL:\n${extractedText.substring(0, 180000)}` }]
+      };
+
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      data = await response.json();
+    }
+
     if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'Erro na API Anthropic' });
 
     const text = data.content?.map(c => c.text || '').join('\n') || '';
@@ -68,11 +157,12 @@ Extraia TODOS os imóveis do edital. Não resuma, não pule nenhum. Inclua todas
         const imoveis = JSON.parse(clean);
         return res.status(200).json({ imoveis, count: imoveis.length });
       } catch (e) {
-        return res.status(200).json({ error: 'Não foi possível parsear os imóveis. Resposta bruta:', raw: text });
+        return res.status(200).json({ error: 'Não foi possível parsear os imóveis.', raw: text.substring(0, 500) });
       }
     }
 
     return res.status(200).json({ analysis: text });
+
   } catch (err) {
     return res.status(500).json({ error: 'Erro interno: ' + err.message });
   }
