@@ -759,37 +759,47 @@ async function handleImport(input){
           {status:'step-wait',icon:'database',label:`${allImoveis.length} imóveis encontrados até agora`}
         ]);
 
+        // Call with automatic retry on rate limit
         let data;
-        try {
-          const resp = await fetch('/api/analyze-edital', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({pdfBase64: parts[i], mode:'bulk'})
-          });
-          const text = await resp.text();
-          try { data = JSON.parse(text); }
-          catch(e) { data = { error: 'Timeout — tente novamente' }; }
-        } catch(e) {
-          data = { error: e.message };
+        let attempts = 0;
+        while (attempts < 3) {
+          attempts++;
+          try {
+            const resp = await fetch('/api/analyze-edital', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({pdfBase64: parts[i], mode:'bulk'})
+            });
+            const text = await resp.text();
+            try { data = JSON.parse(text); }
+            catch(e) { data = { error: 'Timeout' }; }
+          } catch(e) { data = { error: e.message }; }
+
+          if (data?.error?.includes('rate limit') || data?.error?.includes('rate_limit')) {
+            if (attempts < 3) {
+              for (let t = 65; t > 0; t--) {
+                await new Promise(r => setTimeout(r, 1000));
+                setStep([
+                  {status:'step-done',icon:'check',label:`PDF dividido em ${numParts} partes`},
+                  {status:'step-active',icon:'clock',label:`Rate limit atingido. Retomando em ${t}s... (parte ${i+1}/${numParts})`},
+                  {status:'step-wait',icon:'database',label:`${allImoveis.length} imóveis encontrados até agora`}
+                ]);
+              }
+              continue;
+            }
+          } else { break; }
         }
 
         if (data?.error) {
-          console.warn(`Parte ${i+1} erro: ${data.error}`);
-          // Show error in progress but continue
-          setStep([
-            {status:'step-done',icon:'check',label:`PDF dividido em ${numParts} partes`},
-            {status:'step-active',icon:'robot',label:`Parte ${i+1}/${numParts}: erro (${data.error.substring(0,60)}) — continuando...`},
-            {status:'step-wait',icon:'database',label:`${allImoveis.length} imóveis até agora`}
-          ]);
+          console.warn('Parte '+(i+1)+' erro: '+data.error);
         } else if (data?.imoveis?.length) {
           allImoveis = allImoveis.concat(data.imoveis);
-        } else if (data?.raw) {
-          // Claude responded but not with JSON - show what it said
-          console.log(`Parte ${i+1} resposta raw:`, data.raw);
         }
 
-        // Wait 3s between parts to respect rate limit (30k tokens/min)
-        if (i < parts.length - 1) await new Promise(r => setTimeout(r, 3000));
+        if (i < parts.length - 1) {
+          const delay = 8000;
+          await new Promise(r => setTimeout(r, delay));
+        }
       }
 
       if (!allImoveis.length) {
