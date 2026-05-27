@@ -1,60 +1,32 @@
-import { Buffer } from 'buffer';
+const { Buffer } = require('buffer');
 
-// Extract text from PDF using pdf-parse via dynamic import workaround
-async function extractPdfText(base64Data) {
-  const pdfBuffer = Buffer.from(base64Data, 'base64');
-  
-  // Use pdf2json via fetch to a simple text extraction
-  // We'll parse the PDF manually looking for text streams
-  const bytes = new Uint8Array(pdfBuffer);
-  let text = '';
-  
-  // Simple PDF text extraction - find text between BT and ET markers
-  const pdfStr = pdfBuffer.toString('latin1');
-  
-  // Extract text using regex patterns common in PDFs
-  const btEtRegex = /BT([\s\S]*?)ET/g;
-  const tjRegex = /\[(.*?)\]\s*TJ/g;
-  const tfRegex = /\((.*?)\)\s*Tj/g;
-  
-  let match;
-  
-  // Method 1: Extract Tj strings
-  while ((match = tfRegex.exec(pdfStr)) !== null) {
-    const extracted = match[1]
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\t/g, '\t')
-      .replace(/\\\(/g, '(')
-      .replace(/\\\)/g, ')')
-      .replace(/\\\\/g, '\\');
-    text += extracted + ' ';
-  }
-  
-  // If not enough text, try TJ arrays
-  if (text.length < 500) {
-    text = '';
-    const btMatches = pdfStr.match(/BT[\s\S]*?ET/g) || [];
-    for (const bt of btMatches) {
-      const tjMatches = bt.match(/\(([^)]*)\)/g) || [];
-      for (const tj of tjMatches) {
-        const content = tj.slice(1, -1)
-          .replace(/\\n/g, '\n')
-          .replace(/\\r/g, ' ')
-          .replace(/\\\(/g, '(')
-          .replace(/\\\)/g, ')');
-        text += content + ' ';
+function extractTextFromPdf(base64Data) {
+  try {
+    const buf = Buffer.from(base64Data, 'base64');
+    const str = buf.toString('binary');
+    let text = '';
+    const regex1 = /\(([^()\\]*(?:\\.[^()\\]*)*)\)\s*Tj/g;
+    let m;
+    while ((m = regex1.exec(str)) !== null) {
+      const t = m[1].replace(/\\n/g,'\n').replace(/\\r/g,' ').replace(/\\t/g,' ').replace(/\\\(/g,'(').replace(/\\\)/g,')').replace(/\\\\/g,'\\').replace(/[^\x20-\x7E\n]/g,' ');
+      text += t + ' ';
+    }
+    const regex2 = /\[([^\]]*)\]\s*TJ/g;
+    while ((m = regex2.exec(str)) !== null) {
+      const parts = m[1].match(/\(([^()]*)\)/g) || [];
+      for (const p of parts) {
+        const t = p.slice(1,-1).replace(/\\n/g,'\n').replace(/\\\(/g,'(').replace(/\\\)/g,')').replace(/[^\x20-\x7E\n]/g,' ');
+        text += t + ' ';
       }
     }
-  }
-  
-  return text.trim();
+    return text.replace(/\s+/g,' ').trim();
+  } catch(e) { return ''; }
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -65,105 +37,48 @@ export default async function handler(req, res) {
   if (!pdfBase64) return res.status(400).json({ error: 'pdfBase64 obrigatório' });
 
   const prompt = mode === 'bulk'
-    ? `Você é um especialista em leilões de imóveis no Brasil. Analise este edital completo e extraia TODOS os imóveis listados.
-
-Para cada imóvel retorne um objeto JSON. Responda APENAS com um array JSON válido, sem texto antes ou depois, sem markdown, sem blocos de código.
-
-Formato obrigatório:
-[
-  {
-    "lote": "180",
-    "titulo": "Casa 67,5m² — 2 qts, garagem",
-    "endereco": "Rua José de Arimatéia Simplicio, SN, Lt 25 — Nova Altinho, Altinho/PE",
-    "tipo": "Casa",
-    "lance1": 155000,
-    "lance2": 147325,
-    "avaliacao": 155000,
-    "data1": "2026-07-06",
-    "data2": "2026-07-10",
-    "leiloeiro": "Fernando C. Moreira Filho — mgl.com.br",
-    "link": "https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp",
-    "matricula": "5530",
-    "obs": "Observações relevantes, débitos, riscos jurídicos",
-    "modalidade": "Leilão SFI — Edital Único"
-  }
-]
-
-Extraia TODOS os imóveis do edital. Não resuma, não pule nenhum. Inclua todas as observações importantes como gravames, penhoras, imóvel ocupado, débitos de IPTU/condomínio.`
+    ? `Você é um especialista em leilões de imóveis no Brasil. Analise este edital completo e extraia TODOS os imóveis listados. Responda APENAS com um array JSON válido, sem texto antes ou depois, sem markdown, sem blocos de código. Formato: [{"lote":"180","titulo":"Casa 67,5m²","endereco":"Rua X, bairro, cidade/PE","tipo":"Casa","lance1":155000,"lance2":147325,"avaliacao":155000,"data1":"2026-07-06","data2":"2026-07-10","leiloeiro":"Fernando C. Moreira Filho — mgl.com.br","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp","matricula":"5530","obs":"débitos, riscos, gravames","modalidade":"Leilão SFI — Edital Único"}]. Extraia TODOS os imóveis. Não pule nenhum.`
     : `Analise este edital de leilão. Extraia: 1) Imóvel: tipo, endereço, área 2) Valores: lance 1ª e 2ª praça, avaliação 3) Datas das sessões 4) Pagamento: à vista/FGTS/financiamento 5) Débitos: IPTU, condomínio 6) Situação: ocupado/desocupado 7) Leiloeiro: nome, site, comissão 8) Riscos jurídicos. Use bullet points.`;
 
   try {
-    // Try with PDF first, fall back to text extraction if too many pages
-    let requestBody = {
-      model: 'claude-sonnet-4-5',
-      max_tokens: 8000,
-      messages: [{ role: 'user', content: [
-        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
-        { type: 'text', text: prompt }
-      ]}]
-    };
+    const extractedText = extractTextFromPdf(pdfBase64);
+    const useText = extractedText && extractedText.length > 500;
+    
+    const msgContent = useText
+      ? `${prompt}\n\nTEXTO DO EDITAL:\n${extractedText.substring(0, 150000)}`
+      : [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
+          { type: 'text', text: prompt }
+        ];
 
-    let response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    let data = await response.json();
-
-    // If PDF too large, extract text and send as text
-    if (!response.ok && data.error?.message?.includes('100 PDF pages')) {
-      console.log('PDF too large, extracting text...');
-      
-      const extractedText = await extractPdfText(pdfBase64);
-      
-      if (!extractedText || extractedText.length < 200) {
-        return res.status(400).json({ 
-          error: 'PDF tem mais de 100 páginas e não foi possível extrair o texto. Tente dividir o edital em partes menores.' 
-        });
-      }
-
-      // Retry with extracted text
-      requestBody = {
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 8000,
-        messages: [{ role: 'user', content: `${prompt}\n\nTEXTO DO EDITAL:\n${extractedText.substring(0, 180000)}` }]
-      };
+        messages: [{ role: 'user', content: msgContent }]
+      })
+    });
 
-      response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      data = await response.json();
-    }
-
+    const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'Erro na API Anthropic' });
 
     const text = data.content?.map(c => c.text || '').join('\n') || '';
 
     if (mode === 'bulk') {
       try {
-        const clean = text.replace(/```json|```/g, '').trim();
+        const clean = text.replace(/```json|```/g,'').trim();
         const imoveis = JSON.parse(clean);
         return res.status(200).json({ imoveis, count: imoveis.length });
-      } catch (e) {
-        return res.status(200).json({ error: 'Não foi possível parsear os imóveis.', raw: text.substring(0, 500) });
+      } catch(e) {
+        return res.status(200).json({ error: 'Não foi possível parsear os imóveis.', raw: text.substring(0,500) });
       }
     }
 
     return res.status(200).json({ analysis: text });
 
-  } catch (err) {
+  } catch(err) {
     return res.status(500).json({ error: 'Erro interno: ' + err.message });
   }
-}
+};
