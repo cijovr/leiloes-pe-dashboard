@@ -641,43 +641,105 @@ async function delIm(id){if(!confirm('Remover este imóvel?'))return;try{await d
 // ── Bulk Import ──────────────────────────────────────────────────
 let importData=[];
 
+async function splitPdfBrowser(b64, startPage, endPage) {
+  // Load pdf-lib from CDN
+  if (!window.PDFLib) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  const { PDFDocument } = window.PDFLib;
+  const pdfBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const srcDoc = await PDFDocument.load(pdfBytes);
+  const newDoc = await PDFDocument.create();
+  const total = srcDoc.getPageCount();
+  const end = Math.min(endPage, total - 1);
+  const indices = Array.from({length: end - startPage + 1}, (_, i) => startPage + i);
+  const pages = await newDoc.copyPages(srcDoc, indices);
+  pages.forEach(p => newDoc.addPage(p));
+  const newBytes = await newDoc.save();
+  return btoa(String.fromCharCode(...newBytes));
+}
+
+function setStep(steps) {
+  const prog = document.getElementById('imp-progress');
+  prog.style.display = 'block';
+  prog.innerHTML = `<div class="imp-progress">${steps.map(s =>
+    `<div class="imp-step ${s.status}"><i class="ti ti-${s.icon}"></i> ${s.label}</div>`
+  ).join('')}</div>`;
+}
+
 async function handleImport(input){
   const file=input.files[0];if(!file)return;
-  const prog=document.getElementById('imp-progress');
-  const res=document.getElementById('imp-results');
-  prog.style.display='block';res.style.display='none';
-  prog.innerHTML=`
-    <div class="imp-progress">
-      <div class="imp-step step-active"><i class="ti ti-loader"></i> Lendo PDF...</div>
-    </div>`;
+  document.getElementById('imp-results').style.display='none';
+
+  setStep([{status:'step-active',icon:'loader',label:'Lendo PDF...'}]);
+
   const reader=new FileReader();
   reader.onload=async(e)=>{
     const b64=e.target.result.split(',')[1];
-    prog.innerHTML=`<div class="imp-progress">
-      <div class="imp-step step-done"><i class="ti ti-check"></i> PDF lido com sucesso</div>
-      <div class="imp-step step-active"><i class="ti ti-robot"></i> Claude está analisando todos os imóveis do edital...</div>
-      <div class="imp-step step-wait"><i class="ti ti-database"></i> Aguardando extração</div>
-    </div>`;
-    try{
-      const resp=await fetch('/api/analyze-edital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfBase64:b64,mode:'bulk'})});
-      const data=await resp.json();
-      if(!resp.ok||data.error){
-        prog.innerHTML=`<div class="imp-progress"><div class="imp-step" style="color:var(--red)"><i class="ti ti-alert-circle"></i> Erro: ${data.error||'Falha na análise'}</div></div>`;
+
+    setStep([
+      {status:'step-done',icon:'check',label:'PDF lido com sucesso'},
+      {status:'step-active',icon:'cut',label:'Dividindo PDF em partes...'},
+      {status:'step-wait',icon:'robot',label:'Aguardando análise'},
+      {status:'step-wait',icon:'database',label:'Aguardando importação'}
+    ]);
+
+    try {
+      // Split PDF into 3 parts in the browser
+      const [p1, p2, p3] = await Promise.all([
+        splitPdfBrowser(b64, 0, 46),
+        splitPdfBrowser(b64, 47, 93),
+        splitPdfBrowser(b64, 94, 200)
+      ]);
+
+      const parts = [p1, p2, p3];
+      let allImoveis = [];
+
+      for (let i = 0; i < parts.length; i++) {
+        setStep([
+          {status:'step-done',icon:'check',label:'PDF dividido em 3 partes'},
+          {status:'step-active',icon:'robot',label:`Analisando parte ${i+1} de 3...`},
+          {status:'step-wait',icon:'database',label:`${allImoveis.length} imóveis encontrados até agora`}
+        ]);
+
+        const resp = await fetch('/api/analyze-edital', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({pdfBase64: parts[i], mode:'bulk'})
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || data.error) {
+          setStep([{status:'',icon:'alert-circle',label:`Erro na parte ${i+1}: ${data.error||'Falha'}`, style:'color:var(--red)'}]);
+          return;
+        }
+
+        if (data.imoveis?.length) allImoveis = allImoveis.concat(data.imoveis);
+
+        // Small delay between parts
+        if (i < parts.length - 1) await new Promise(r => setTimeout(r, 1500));
+      }
+
+      if (!allImoveis.length) {
+        setStep([{status:'',icon:'alert-circle',label:'Nenhum imóvel encontrado no edital.'}]);
         return;
       }
-      if(!data.imoveis?.length){
-        prog.innerHTML=`<div class="imp-progress"><div class="imp-step" style="color:var(--amb)"><i class="ti ti-alert-circle"></i> Nenhum imóvel encontrado no edital.</div></div>`;
-        return;
-      }
-      importData=data.imoveis;
-      prog.innerHTML=`<div class="imp-progress">
-        <div class="imp-step step-done"><i class="ti ti-check"></i> PDF lido</div>
-        <div class="imp-step step-done"><i class="ti ti-check"></i> ${data.count} imóveis extraídos</div>
-        <div class="imp-step step-active"><i class="ti ti-hand-click"></i> Selecione os imóveis para importar</div>
-      </div>`;
-      renderImportResults(data.imoveis);
-    }catch(err){
-      prog.innerHTML=`<div class="imp-progress"><div class="imp-step" style="color:var(--red)"><i class="ti ti-alert-circle"></i> Erro de conexão. Verifique se a ANTHROPIC_API_KEY está configurada no Vercel.</div></div>`;
+
+      importData = allImoveis;
+      setStep([
+        {status:'step-done',icon:'check',label:'PDF analisado com sucesso'},
+        {status:'step-done',icon:'check',label:`${allImoveis.length} imóveis extraídos`},
+        {status:'step-active',icon:'hand-click',label:'Selecione os imóveis para importar'}
+      ]);
+      renderImportResults(allImoveis);
+
+    } catch(err) {
+      setStep([{status:'',icon:'alert-circle',label:'Erro: '+err.message}]);
     }
   };
   reader.readAsDataURL(file);
