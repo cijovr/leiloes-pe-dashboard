@@ -212,7 +212,7 @@ window.dispatchEvent(new Event('firebase-ready'));
   <div class="nav-sec">Importar</div>
   <button class="nav-item" onclick="showTab('importar',this)" id="nav-importar"><i class="ti ti-file-upload"></i>Importar Edital</button>
   <div class="nav-sec">Edital ativo</div>
-  <div style="font-size:11px;color:var(--tx2);padding:3px 10px;line-height:1.7">Caixa 0028/0226<br><span style="color:var(--grn)">06/07 e 10/07/2026</span><br>mgl.com.br</div>
+  <div id="edital-ativo-info" style="font-size:11px;color:var(--tx2);padding:3px 10px;line-height:1.7">Nenhum edital<br>importado ainda</div>
   <div class="nav-sec">Filtros</div>
   <button class="nav-item" onclick="setQF('todos')"><i class="ti ti-list"></i>Todos</button>
   <button class="nav-item" onclick="setQF('ate200')"><i class="ti ti-tag"></i>Até R$200k</button>
@@ -230,7 +230,7 @@ window.dispatchEvent(new Event('firebase-ready'));
 <!-- TAB: Imóveis -->
 <div id="tab-cards">
   <div class="topbar">
-    <div><div class="page-title">Imóveis em acompanhamento</div><div class="page-sub">Leilões de imóveis em Pernambuco</div></div>
+    <div><div class="page-title">Imóveis em acompanhamento</div><div class="page-sub">Gerencie seus leilões de imóveis</div></div>
     <div class="btn-row">
       <button class="btn" onclick="showTab('importar',document.getElementById('nav-importar'))"><i class="ti ti-file-upload"></i>Importar edital</button>
       <button class="btn pri" onclick="openAdd()"><i class="ti ti-plus"></i>Adicionar imóvel</button>
@@ -441,7 +441,20 @@ async function delDoc(id){
   await deleteDoc(doc(window._db,window._col,id));
 }
 
-function render(){renderMets();renderCards();renderCron();renderAlarmes();renderFavoritos();updateAlarmBadge();}
+function render(){renderMets();renderCards();renderCron();renderAlarmes();renderFavoritos();updateAlarmBadge();updateEditalInfo();}
+
+function updateEditalInfo(){
+  const el = document.getElementById('edital-ativo-info');
+  if(!el) return;
+  if(!imoveis.length){ el.innerHTML='Nenhum edital<br>importado ainda'; return; }
+  // Get most common leiloeiro and date range from sessions
+  const leiloeiros = imoveis.map(i=>i.leiloeiro).filter(Boolean);
+  const leiloeiro = leiloeiros.length ? leiloeiros[0].split('—')[1]?.trim() || leiloeiros[0].split(' ')[0] : '—';
+  const allDates = imoveis.flatMap(i=>(i.sessions||[]).map(s=>s.date)).filter(Boolean).sort();
+  const minDate = allDates[0] ? new Date(allDates[0]+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+  const maxDate = allDates[allDates.length-1] ? new Date(allDates[allDates.length-1]+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+  el.innerHTML = `${imoveis.length} imóveis<br><span style="color:var(--grn)">${minDate}${minDate!==maxDate?' a '+maxDate:''}</span><br><span style="color:var(--tx3)">${leiloeiro.substring(0,20)}</span>`;
+}
 
 function renderMets(){
   const t=imoveis.length,at=imoveis.filter(i=>['ati','urg','hoj'].includes(stOf(i))).length;
@@ -487,6 +500,7 @@ function renderCards(){
       <div class="crow"><span class="ck">Avaliação</span><span class="cv">${fR(im.avaliacao)}</span></div>
       ${d>0?`<div class="crow"><span class="ck">Deságio</span><span class="cv g">${pct(d)}</span></div>`:''}
       <div class="crow"><span class="ck">Tipo</span><span class="cv" style="font-size:11px">${im.tipo||'—'} · ${im.modalidade||'—'}</span></div>
+      ${im.matricula?`<div class="crow"><span class="ck">Matrícula</span><span class="cv" style="font-family:monospace;font-size:11px;color:var(--blu)">${im.matricula} <a href="https://www.registrodeimoveis.org.br/" target="_blank" onclick="event.stopPropagation()" title="Pesquisar matrícula" style="color:var(--blu);text-decoration:none"><i class="ti ti-external-link" style="font-size:10px"></i></a></span></div>`:''}
       ${sess?`<div class="smini">${sess}</div>`:''}
       ${im.obs?`<div class="warn">${im.obs.substring(0,80)}${im.obs.length>80?'...':''}</div>`:''}
       <div class="cact" onclick="event.stopPropagation()">
@@ -585,6 +599,7 @@ function openDet(id){
       <div class="di"><div class="dk">Tipo</div><div class="dv">${im.tipo||'—'}</div></div>
       <div class="di"><div class="dk">Modalidade</div><div class="dv" style="font-size:11px">${im.modalidade||'—'}</div></div>
       <div class="di"><div class="dk">Leiloeiro</div><div class="dv" style="font-size:11px">${im.leiloeiro||'—'}</div></div>
+      ${im.matricula?`<div class="di" style="grid-column:1/-1"><div class="dk">Matrícula do imóvel</div><div class="dv" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:monospace">${im.matricula}</span><a href="https://www.registrodeimoveis.org.br/" target="_blank" class="btn" style="font-size:11px;padding:3px 8px"><i class="ti ti-search"></i> Cartório de Registro</a><a href="https://www.jusbrasil.com.br/consulta-processual/" target="_blank" class="btn" style="font-size:11px;padding:3px 8px"><i class="ti ti-scale"></i> Ações judiciais</a><a href="https://www.google.com/search?q=IPTU+${encodeURIComponent(im.endereco||'')}" target="_blank" class="btn" style="font-size:11px;padding:3px 8px"><i class="ti ti-receipt-tax"></i> Pesquisar IPTU</a></div></div>`:''}
     </div>
     <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Custo estimado de aquisição</div>
       <div class="cr"><span>Lance</span><span>${fR(im.lance)}</span></div>
@@ -701,7 +716,7 @@ async function handleImport(input){
     try {
       // Auto-calculate number of parts based on PDF page count
       // Max 20 pages per part = safe for Vercel 10s timeout
-      const PAGES_PER_PART = 20;
+      const PAGES_PER_PART = 15;
 
       // First load PDF to get page count
       if (!window.PDFLib) {
@@ -760,15 +775,40 @@ async function handleImport(input){
 
         if (data?.error) {
           console.warn(`Parte ${i+1} erro: ${data.error}`);
+          // Show error in progress but continue
+          setStep([
+            {status:'step-done',icon:'check',label:`PDF dividido em ${numParts} partes`},
+            {status:'step-active',icon:'robot',label:`Parte ${i+1}/${numParts}: erro (${data.error.substring(0,60)}) — continuando...`},
+            {status:'step-wait',icon:'database',label:`${allImoveis.length} imóveis até agora`}
+          ]);
         } else if (data?.imoveis?.length) {
           allImoveis = allImoveis.concat(data.imoveis);
+        } else if (data?.raw) {
+          // Claude responded but not with JSON - show what it said
+          console.log(`Parte ${i+1} resposta raw:`, data.raw);
         }
 
         if (i < parts.length - 1) await new Promise(r => setTimeout(r, 500));
       }
 
       if (!allImoveis.length) {
-        setStep([{status:'',icon:'alert-circle',label:'Nenhum imóvel encontrado no edital.'}]);
+        // Try with a simpler prompt on the last part as diagnostic
+        setStep([{status:'step-active',icon:'robot',label:'Nenhum imóvel nas partes. Tentando abordagem alternativa...'}]);
+        try {
+          const lastPart = parts[parts.length - 1];
+          const resp = await fetch('/api/analyze-edital', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({pdfBase64: lastPart, mode:'single_check'})
+          });
+          const txt = await resp.text();
+          let d;
+          try { d = JSON.parse(txt); } catch(e) { d = {}; }
+          const preview = d.analysis || d.raw || txt.substring(0,200);
+          setStep([{status:'',icon:'alert-circle',label:`Conteúdo desta parte: "${preview.substring(0,120)}..."`}]);
+        } catch(e) {
+          setStep([{status:'',icon:'alert-circle',label:'Nenhum imóvel encontrado. O edital pode estar em formato diferente.'}]);
+        }
         return;
       }
 
@@ -852,7 +892,8 @@ async function importSelected(){
         modalidade:im.modalidade||'Leilão SFI — Edital Único',
         status:'ativo',
         leiloeiro:im.leiloeiro||'',
-        link:im.link||'https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp',
+        link:im.link||'',
+        matricula:im.matricula||'',
         sessions:[
           ...(im.data1?[{order:1,label:'1ª sessão',date:im.data1}]:[]),
           ...(im.data2?[{order:2,label:'2ª sessão',date:im.data2}]:[])
