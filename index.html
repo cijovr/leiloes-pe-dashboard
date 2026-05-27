@@ -577,7 +577,8 @@ function getFilt(){
   const fCidade=document.getElementById('f-cidade')?.value||'';
   const fBairro=document.getElementById('f-bairro')?.value||'';
   const fTipoIm=document.getElementById('f-tipo')?.value||'';
-  return imoveis.filter(im=>{
+
+  const result = imoveis.filter(im=>{
     const st=stOf(im);
     if(filtro==='ativo'&&!['ati','urg','hoj'].includes(st))return false;
     if(filtro==='urgente'&&!['urg','hoj'].includes(st))return false;
@@ -588,7 +589,10 @@ function getFilt(){
     if(fCidade&&p.cidade!==fCidade)return false;
     if(fBairro&&p.bairro!==fBairro)return false;
     if(fTipoIm&&im.tipo!==fTipoIm)return false;
-    if(txt){const h=[im.titulo,im.endereco,im.leiloeiro,im.tipo,im.matricula||''].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');if(!h.includes(txt))return false;}
+    if(txt){
+      const h=[im.titulo,im.endereco,im.leiloeiro,im.tipo,im.matricula||''].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      if(!h.includes(txt))return false;
+    }
     return true;
   });
 
@@ -598,12 +602,15 @@ function getFilt(){
     if(sort==='menor') return (a.lance||0)-(b.lance||0);
     if(sort==='maior') return (b.lance||0)-(a.lance||0);
     if(sort==='des1') return des(b.lance,b.avaliacao)-des(a.lance,a.avaliacao);
-    if(sort==='des2'){const l2a=a.sessions?.[1]?.date?a.lance*0.8:a.lance,l2b=b.sessions?.[1]?.date?b.lance*0.8:b.lance;return des(l2b,b.avaliacao)-des(l2a,a.avaliacao);}
+    if(sort==='des2'){
+      const l2a=a.lance2||Math.round((a.lance||0)*0.75);
+      const l2b=b.lance2||Math.round((b.lance||0)*0.75);
+      return des(l2b,b.avaliacao)-des(l2a,a.avaliacao);
+    }
     return 0;
   });
   return result;
 }
-
 function renderCards(){
   const list=getFilt();
   document.getElementById('clbl').textContent=list.length+' imóvel'+(list.length!==1?'is':'');
