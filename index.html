@@ -740,6 +740,20 @@ async function handleImport(input){
         const end = Math.min(start + PAGES_PER_PART - 1, totalPages - 1);
         pageParts.push([start, end]);
       }
+      
+      // Reorder: process middle pages first (where property listings usually are)
+      // Skip first 30% (legal clauses) and last 10% (annexes) — process them last
+      const skipStart = Math.floor(numParts * 0.3);
+      const skipEnd = Math.max(0, numParts - Math.floor(numParts * 0.1) - 1);
+      const middleParts = pageParts.slice(skipStart, skipEnd + 1);
+      const firstParts = pageParts.slice(0, skipStart);
+      const lastParts = pageParts.slice(skipEnd + 1);
+      const orderedParts = [...middleParts, ...firstParts, ...lastParts];
+      const orderedIndices = [
+        ...Array.from({length: middleParts.length}, (_,i) => i + skipStart),
+        ...Array.from({length: firstParts.length}, (_,i) => i),
+        ...Array.from({length: lastParts.length}, (_,i) => i + skipEnd + 1)
+      ];
 
       setStep([
         {status:'step-done',icon:'check',label:`PDF lido — ${totalPages} páginas`},
@@ -748,7 +762,7 @@ async function handleImport(input){
       ]);
 
       // Split all parts
-      const parts = await Promise.all(pageParts.map(([s,e]) => splitPdfBrowser(b64, s, e)));
+      const parts = await Promise.all(orderedParts.map(([s,e]) => splitPdfBrowser(b64, s, e)));
       let allImoveis = [];
 
       for (let i = 0; i < parts.length; i++) {
@@ -802,6 +816,13 @@ async function handleImport(input){
           await new Promise(r => setTimeout(r, delay));
         }
       }
+
+      // Sort by lote number before presenting
+      allImoveis.sort((a, b) => {
+        const la = parseInt(a.lote) || 0;
+        const lb = parseInt(b.lote) || 0;
+        return la - lb;
+      });
 
       if (!allImoveis.length) {
         // Try with a simpler prompt on the last part as diagnostic
