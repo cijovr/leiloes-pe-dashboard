@@ -313,9 +313,20 @@ window.dispatchEvent(new Event('firebase-ready'));
     <div>
       <div class="roi-sec"><div class="roi-t">Arremate</div>
         <div class="frow" style="margin-bottom:8px">
-          <div><label class="fl">Lance (R$)</label><input class="fi" type="number" id="rl" value="150000" oninput="calcROI()"></div>
           <div><label class="fl">Avaliação (R$)</label><input class="fi" type="number" id="ra" value="220000" oninput="calcROI()"></div>
+          <div><label class="fl">Qual leilão?</label>
+            <select class="fi" id="roi-qual" onchange="trocarLance()">
+              <option value="1">1º Leilão</option>
+              <option value="2">2º Leilão</option>
+            </select>
+          </div>
         </div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><label class="fl">Lance 1º leilão (R$)</label><input class="fi" type="number" id="rl1" value="150000" oninput="syncLance()"></div>
+          <div><label class="fl">Lance 2º leilão (R$)</label><input class="fi" type="number" id="rl2" value="0" oninput="syncLance()"></div>
+        </div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:4px">Lance sendo calculado: <strong id="roi-lance-label">1º leilão — R$ 150.000</strong></div>
+        <input type="hidden" id="rl" value="150000">
       </div>
       <div class="roi-sec"><div class="roi-t">Custos</div>
         <div class="frow" style="margin-bottom:8px">
@@ -625,9 +636,11 @@ function renderCards(){
       ${al?`<span class="alarm-badge"><i class="ti ti-bell" style="font-size:10px"></i> ${nxS(im).days===0?'HOJE':(nxS(im).days===1?'Amanhã':'em '+nxS(im).days+'d')}</span>`:''}
       <div class="ctop"><div class="ctitle">${im.titulo||'Sem título'}</div><span class="badge ${bm[st]}">${lm[st]}</span></div>
       <div class="caddr"><i class="ti ti-map-pin" style="font-size:11px"></i> ${im.endereco||'—'}</div>
-      <div class="crow"><span class="ck">Lance</span><span class="cv g">${fR(im.lance)}</span></div>
+      <div class="crow"><span class="ck">Lance 1º leilão</span><span class="cv g">${fR(im.lance)}</span></div>
+      ${im.lance2?`<div class="crow"><span class="ck">Lance 2º leilão</span><span class="cv g">${fR(im.lance2)}</span></div>`:''}
       <div class="crow"><span class="ck">Avaliação</span><span class="cv">${fR(im.avaliacao)}</span></div>
-      ${d>0?`<div class="crow"><span class="ck">Deságio</span><span class="cv g">${pct(d)}</span></div>`:''}
+      ${d>0?`<div class="crow"><span class="ck">Deságio 1º</span><span class="cv g">${pct(d)}</span></div>`:''}
+      ${im.lance2&&im.avaliacao?`<div class="crow"><span class="ck">Deságio 2º</span><span class="cv g">${pct(des(im.lance2,im.avaliacao))}</span></div>`:''}
       <div class="crow"><span class="ck">Tipo</span><span class="cv" style="font-size:11px">${im.tipo||'—'} · ${im.modalidade||'—'}</span></div>
       ${im.matricula?`<div class="crow"><span class="ck">Matrícula</span><span class="cv" style="font-family:monospace;font-size:11px;color:var(--blu)">${im.matricula} <a href="https://www.registrodeimoveis.org.br/" target="_blank" onclick="event.stopPropagation()" title="Pesquisar matrícula" style="color:var(--blu);text-decoration:none"><i class="ti ti-external-link" style="font-size:10px"></i></a></span></div>`:''}
       ${sess?`<div class="smini">${sess}</div>`:''}
@@ -723,9 +736,11 @@ function openDet(id){
     </div>
     <div style="font-size:12px;color:var(--tx2);margin-bottom:12px"><i class="ti ti-map-pin" style="font-size:11px"></i> ${im.endereco||'—'}</div>
     <div class="det-g">
-      <div class="di"><div class="dk">Lance mínimo</div><div class="dv" style="color:var(--grn)">${fR(im.lance)}</div></div>
+      <div class="di"><div class="dk">Lance 1º leilão</div><div class="dv" style="color:var(--grn)">${fR(im.lance)}</div></div>
+      ${im.lance2?`<div class="di"><div class="dk">Lance 2º leilão</div><div class="dv" style="color:var(--grn)">${fR(im.lance2)}</div></div>`:''}
       <div class="di"><div class="dk">Avaliação</div><div class="dv">${fR(im.avaliacao)}</div></div>
-      <div class="di"><div class="dk">Deságio</div><div class="dv">${d>0?pct(d):'0%'}</div></div>
+      <div class="di"><div class="dk">Deságio 1º</div><div class="dv">${d>0?pct(d):'0%'}</div></div>
+      ${im.lance2?`<div class="di"><div class="dk">Deságio 2º</div><div class="dv">${pct(des(im.lance2,im.avaliacao))}</div></div>`:''}
       <div class="di"><div class="dk">Tipo</div><div class="dv">${im.tipo||'—'}</div></div>
       <div class="di"><div class="dk">Modalidade</div><div class="dv" style="font-size:11px">${im.modalidade||'—'}</div></div>
       <div class="di"><div class="dk">Leiloeiro</div><div class="dv" style="font-size:11px">${im.leiloeiro||'—'}</div></div>
@@ -742,13 +757,17 @@ function openDet(id){
     <div style="margin-bottom:12px">
       <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Fotos e localização</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <a href="https://www.google.com/maps/search/${encodeURIComponent((im.endereco||'').split('—')[0].trim())}" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-map-2"></i> Ver no Google Maps</a>
-        <a href="https://www.google.com/maps?q=${encodeURIComponent((im.endereco||'').split('—')[0].trim())}&layer=c&cbll=" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-camera"></i> Street View</a>
-        ${im.link?`<a href="${im.link}" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-external-link"></i> Fotos no edital</a>`:''}
-        <a href="https://www.google.com/search?q=${encodeURIComponent((im.titulo||'')+(im.endereco||'').split('—').pop()+'leilão imovel fotos')}&tbm=isch" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-photo"></i> Buscar fotos</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(((im.endereco||'').split('—')[0]||'').trim()+', Brasil')}" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-map-2"></i> Google Maps</a>
+        <a href="https://www.google.com/maps?q=${encodeURIComponent(((im.endereco||'').split('—')[0]||'').trim()+', Brasil')}&layer=c" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-camera"></i> Street View</a>
+        <a href="https://www.google.com/search?q=${encodeURIComponent('fotos '+((im.endereco||'').split('—')[0]||'').trim())}&tbm=isch" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-photo-search"></i> Fotos do endereço</a>
+        <a href="https://www.google.com/search?q=${encodeURIComponent('leilão imovel fotos '+(im.titulo||'')+' '+(((im.endereco||'').split('—')[1]||'').split(',').pop()||'').trim())}&tbm=isch" target="_blank" class="btn" style="justify-content:center;font-size:12px"><i class="ti ti-building-estate"></i> Fotos do lote</a>
+        ${im.link?`<a href="${im.link}" target="_blank" class="btn" style="justify-content:center;font-size:12px;grid-column:1/-1"><i class="ti ti-external-link"></i> Página oficial do imóvel (Caixa/leiloeiro)</a>`:''}
       </div>
     </div>
-    ${im.link?`<a href="${im.link}" target="_blank" class="btn" style="display:flex;justify-content:center;margin-top:8px"><i class="ti ti-external-link"></i> Abrir edital</a>`:''}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="abrirROI('${im.id}');closeModal('modal-det')" class="btn pri" style="flex:1;justify-content:center"><i class="ti ti-chart-line"></i> Calcular ROI</button>
+      ${im.link?`<a href="${im.link}" target="_blank" class="btn" style="flex:1;justify-content:center"><i class="ti ti-external-link"></i> Abrir edital</a>`:''}
+    </div>
   `;
   openModal('modal-det');
 }
@@ -1121,22 +1140,37 @@ iu.addEventListener('dragover',e=>{e.preventDefault();iu.style.borderColor='var(
 iu.addEventListener('dragleave',()=>iu.style.borderColor='');
 iu.addEventListener('drop',e=>{e.preventDefault();iu.style.borderColor='';const f=e.dataTransfer.files[0];if(f?.type==='application/pdf'){const dt=new DataTransfer();dt.items.add(f);const inp=document.getElementById('imp-pdf');inp.files=dt.files;handleImport(inp);}});
 
+function trocarLance(){
+  const qual = document.getElementById('roi-qual')?.value || '1';
+  const l1 = parseFloat(document.getElementById('rl1')?.value)||0;
+  const l2 = parseFloat(document.getElementById('rl2')?.value)||0;
+  const lance = qual==='2' ? l2 : l1;
+  document.getElementById('rl').value = lance;
+  document.getElementById('roi-lance-label').textContent = (qual==='2'?'2º':'1º')+' leilão — R$ '+Math.round(lance).toLocaleString('pt-BR');
+  calcROI();
+}
+
+function syncLance(){
+  trocarLance();
+}
+
 function abrirROI(id){
   const im = imoveis.find(i=>i.id===id); if(!im) return;
-  // Fill ROI calculator with this imovel's data
+  document.getElementById('rl1').value = im.lance||0;
+  document.getElementById('rl2').value = im.lance2||0;
   document.getElementById('rl').value = im.lance||0;
   document.getElementById('ra').value = im.avaliacao||0;
-  // Calculate ITBI
-  const itbi = Math.round((im.lance||0)*0.03);
   document.getElementById('rr').value = 1500;
   document.getElementById('rd').value = 0;
-  document.getElementById('rc').value = Math.round((im.lance||0)*0.05); // 5% comissão leiloeiro
-  // Default reform and sell price
+  document.getElementById('rc').value = Math.round((im.lance||0)*0.05);
   document.getElementById('rfo').value = 20000;
   document.getElementById('rv').value = Math.round((im.avaliacao||im.lance||0)*1.1);
+  document.getElementById('roi-qual').value = '1';
+  document.getElementById('roi-lance-label').textContent = '1º leilão — R$ '+Math.round(im.lance||0).toLocaleString('pt-BR');
+  if(im.lance2) document.getElementById('roi-qual').innerHTML = `<option value="1">1º Leilão — ${fR(im.lance)}</option><option value="2">2º Leilão — ${fR(im.lance2)}</option>`;
   calcROI();
   showTab('roi', document.getElementById('nav-roi'));
-  showToast('ROI calculado para: '+im.titulo?.substring(0,40));
+  showToast('ROI: '+im.titulo?.substring(0,40));
 }
 
 function calcROI(){
