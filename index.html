@@ -364,6 +364,13 @@ window.dispatchEvent(new Event('firebase-ready'));
           <div><label class="fl">IPTU/mês (R$)</label><input class="fi" type="number" id="rip" value="200" oninput="calcROI()"></div>
           <div><label class="fl">Cond./mês (R$)</label><input class="fi" type="number" id="rco" value="0" oninput="calcROI()"></div>
         </div>
+        <div id="roi-pesquisa-links" style="display:none;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Estimativa para: <strong id="roi-pesquisa-local" style="color:var(--tx2)"></strong></div>
+          <button onclick="estimarCustos()" id="btn-estimar" class="btn" style="width:100%;justify-content:center;font-size:12px">
+            <i class="ti ti-wand" aria-hidden="true"></i> Estimar IPTU e Condomínio com IA
+          </button>
+          <div id="estimativa-result" style="margin-top:8px;display:none"></div>
+        </div>
         <label class="fl">Meses até venda</label>
         <div style="display:flex;align-items:center;gap:8px">
           <input type="range" min="1" max="36" step="1" value="8" id="rm" oninput="document.getElementById('rmo').textContent=this.value+'m';calcROI()" style="flex:1;accent-color:var(--grn)">
@@ -1159,10 +1166,12 @@ function updateRoiFavBadge(){
 function saveROIFav(){
   const g=id=>parseFloat(document.getElementById(id)?.value)||0;
   const loteLabel = document.getElementById('roi-lote-label')?.textContent||'Simulação manual';
+  const im2 = window._roiLoteId ? imoveis.find(i=>i.id===window._roiLoteId) : null;
   const fav = {
-    id: 'roi_'+Date.now(),
+    id: window._editingRoiFavId || ('roi_'+Date.now()),
     loteLabel,
     loteId: window._roiLoteId||'',
+    endereco: im2?.endereco || '',
     savedAt: new Date().toISOString(),
     inputs: {
       rl: g('rl'), rl1: g('rl1'), rl2: g('rl2'), ra: g('ra'),
@@ -1177,10 +1186,17 @@ function saveROIFav(){
     }
   };
   const favs = getRoiFavs();
-  favs.unshift(fav);
+  const existingIdx = favs.findIndex(f=>f.id===fav.id);
+  if(existingIdx >= 0){
+    favs[existingIdx] = fav; // update existing
+    showToast('Simulação atualizada!');
+  } else {
+    favs.unshift(fav); // new save
+    showToast('Simulação salva!');
+  }
   saveRoiFavs(favs);
-  showToast('Simulação salva!');
   updateRoiFavBadge();
+  window._editingRoiFavId = fav.id; // keep editing same id
 }
 
 function loadROIFav(id){
@@ -1199,6 +1215,10 @@ function loadROIFav(id){
   if(document.getElementById('rmo')) document.getElementById('rmo').textContent=s.rm+'m';
   if(document.getElementById('roi-lote-label')) document.getElementById('roi-lote-label').textContent=fav.loteLabel;
   window._roiLoteId = fav.loteId;
+  window._editingRoiFavId = fav.id;
+  // Update save button to show "editing" state
+  const saveBtn = document.getElementById('btn-save-roi');
+  if(saveBtn) saveBtn.innerHTML = '<i class="ti ti-bookmark"></i> Salvar alterações';
   calcROI();
   showTab('roi', document.getElementById('nav-roi'));
   showToast('Simulação carregada!');
@@ -1234,7 +1254,8 @@ function renderRoiFavs(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
           <div style="font-size:13px;font-weight:500">${fav.loteLabel||'Simulação'}</div>
-          <div style="font-size:11px;color:var(--tx3)">Salvo em ${dt} · ${s.roiQual==='2'?'2º':'1º'} leilão</div>
+          ${fav.endereco?`<div style="font-size:12px;color:var(--tx2);margin-top:2px"><i class="ti ti-map-pin" style="font-size:11px"></i> ${fav.endereco}</div>`:''}
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Salvo em ${dt} · ${s.roiQual==='2'?'2º':'1º'} leilão</div>
         </div>
         <div style="display:flex;gap:6px">
           <button onclick="loadROIFav('${fav.id}')" class="btn" style="font-size:11px;padding:5px 10px"><i class="ti ti-edit"></i> Editar</button>
@@ -1250,6 +1271,79 @@ function renderRoiFavs(){
       ${s.obs?`<div style="margin-top:8px;font-size:12px;color:var(--tx2);background:var(--sur2);border-radius:var(--r);padding:7px 10px">${s.obs}</div>`:''}
     </div>`;
   }).join('');
+}
+
+async function estimarCustos(){
+  const btn = document.getElementById('btn-estimar');
+  const resEl = document.getElementById('estimativa-result');
+  if(!btn || !resEl) return;
+
+  const im = window._roiLoteId ? imoveis.find(i=>i.id===window._roiLoteId) : null;
+  if(!im){ alert('Abra o ROI a partir de um imóvel para usar esta função.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid var(--brd2);border-top-color:var(--grn);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:6px"></span> Estimando...';
+
+  const p = parseEndereco(im.endereco);
+  const areaMatch = im.titulo?.match(/(\d+[,.]?\d*)\s*m²/);
+  const area = areaMatch ? areaMatch[1].replace(',','.') : '60';
+
+  try {
+    const resp = await fetch('/api/estimar-custos', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        tipo: im.tipo||'Apartamento',
+        area,
+        bairro: p.bairro,
+        cidade: p.cidade,
+        uf: p.uf,
+        lance: im.avaliacao||im.lance
+      })
+    });
+
+    const data = await resp.json();
+
+    if(data.error){
+      resEl.style.display='block';
+      resEl.innerHTML=`<div style="font-size:12px;color:var(--red-tx);background:var(--red-bg);border-radius:var(--r);padding:8px 10px">${data.error}</div>`;
+    } else {
+      // Apply estimates to fields
+      if(data.iptu_mensal) document.getElementById('rip').value = data.iptu_mensal;
+      if(data.condominio_mensal) document.getElementById('rco').value = data.condominio_mensal;
+      calcROI();
+
+      const confBg = data.confianca==='alta'?'var(--grn-bg)':data.confianca==='media'?'var(--amb-bg)':'var(--blu-bg)';
+      const confTx = data.confianca==='alta'?'var(--grn-tx)':data.confianca==='media'?'var(--amb-tx)':'var(--blu-tx)';
+      const confIcon = data.confianca==='alta'?'ti-circle-check':data.confianca==='media'?'ti-alert-circle':'ti-info-circle';
+
+      resEl.style.display='block';
+      resEl.innerHTML=`
+        <div style="background:${confBg};border-radius:var(--r);padding:9px 12px;font-size:12px;color:${confTx}">
+          <div style="font-weight:500;margin-bottom:6px"><i class="ti ${confIcon}" style="font-size:13px"></i> Estimativa aplicada — confiança ${data.confianca||'média'}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <div style="background:rgba(255,255,255,0.4);border-radius:6px;padding:6px 8px">
+              <div style="font-size:10px;opacity:.8;text-transform:uppercase;letter-spacing:.04em">IPTU/mês</div>
+              <div style="font-size:16px;font-weight:500">R$ ${(data.iptu_mensal||0).toLocaleString('pt-BR')}</div>
+              <div style="font-size:10px;opacity:.75">R$ ${(data.iptu_anual||0).toLocaleString('pt-BR')}/ano</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.4);border-radius:6px;padding:6px 8px">
+              <div style="font-size:10px;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Condomínio/mês</div>
+              <div style="font-size:16px;font-weight:500">R$ ${(data.condominio_mensal||0).toLocaleString('pt-BR')}</div>
+              <div style="font-size:10px;opacity:.75">${data.condominio_nota||''}</div>
+            </div>
+          </div>
+          <div style="font-size:10px;opacity:.75"><i class="ti ti-info-circle" style="font-size:11px"></i> ${data.fonte||'Estimativa baseada em imóveis similares no bairro'}</div>
+          <div style="font-size:10px;opacity:.75;margin-top:2px">${data.iptu_nota||''}</div>
+        </div>`;
+    }
+  } catch(e) {
+    resEl.style.display='block';
+    resEl.innerHTML=`<div style="font-size:12px;color:var(--red-tx);background:var(--red-bg);border-radius:var(--r);padding:8px 10px">Erro de conexão: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-wand" aria-hidden="true"></i> Estimar IPTU e Condomínio com IA';
 }
 
 function showTab(tab,btn){
@@ -1291,6 +1385,9 @@ function syncLance(){
 
 function abrirROI(id){
   const im = imoveis.find(i=>i.id===id); if(!im) return;
+  window._editingRoiFavId = null; // fresh ROI, not editing existing
+  const saveBtn = document.getElementById('btn-save-roi');
+  if(saveBtn) saveBtn.innerHTML = '<i class="ti ti-bookmark"></i> Salvar simulação';
   document.getElementById('rl1').value = im.lance||0;
   document.getElementById('rl2').value = im.lance2||0;
   document.getElementById('rl').value = im.lance||0;
@@ -1308,6 +1405,19 @@ function abrirROI(id){
   window._roiLoteId = im.id;
   if(document.getElementById('roi-lote-label')) document.getElementById('roi-lote-label').textContent = '📍 '+im.titulo?.substring(0,50);
   if(document.getElementById('roi-obs')) document.getElementById('roi-obs').value = im.obs||'';
+  // Show research links for IPTU/cond
+  const endBase = (im.endereco||'').split('—');
+  const cidade = endBase[endBase.length-1]?.trim()||'';
+  const endRua = endBase[0]?.trim()||'';
+  const pesqDiv = document.getElementById('roi-pesquisa-links');
+  const pesqLocal = document.getElementById('roi-pesquisa-local');
+  const estimResult = document.getElementById('estimativa-result');
+  if(pesqDiv){
+    const p2 = parseEndereco(im.endereco);
+    pesqDiv.style.display='block';
+    if(pesqLocal) pesqLocal.textContent = (p2.bairro?p2.bairro+', ':'')+p2.cidade+(p2.uf?'/'+p2.uf:'');
+    if(estimResult){ estimResult.style.display='none'; estimResult.innerHTML=''; }
+  }
   showToast('ROI: '+im.titulo?.substring(0,40));
 }
 
