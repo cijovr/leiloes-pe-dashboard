@@ -641,8 +641,7 @@ async function delIm(id){if(!confirm('Remover este imóvel?'))return;try{await d
 // ── Bulk Import ──────────────────────────────────────────────────
 let importData=[];
 
-async function splitPdfBrowser(b64, startPage, endPage) {
-  // Load pdf-lib from CDN
+async function loadPdfLib() {
   if (!window.PDFLib) {
     await new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -651,7 +650,11 @@ async function splitPdfBrowser(b64, startPage, endPage) {
       document.head.appendChild(s);
     });
   }
-  const { PDFDocument } = window.PDFLib;
+  return window.PDFLib;
+}
+
+async function splitPdfBrowser(b64, startPage, endPage) {
+  const { PDFDocument } = await loadPdfLib();
   const pdfBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
   const srcDoc = await PDFDocument.load(pdfBytes);
   const newDoc = await PDFDocument.create();
@@ -696,39 +699,72 @@ async function handleImport(input){
     ]);
 
     try {
-      // Split PDF into 3 parts in the browser
-      const [p1, p2, p3] = await Promise.all([
-        splitPdfBrowser(b64, 0, 46),
-        splitPdfBrowser(b64, 47, 93),
-        splitPdfBrowser(b64, 94, 200)
+      // Auto-calculate number of parts based on PDF page count
+      // Max 20 pages per part = safe for Vercel 10s timeout
+      const PAGES_PER_PART = 20;
+
+      // First load PDF to get page count
+      if (!window.PDFLib) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const { PDFDocument } = window.PDFLib;
+      const tmpBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const tmpDoc = await PDFDocument.load(tmpBytes);
+      const totalPages = tmpDoc.getPageCount();
+      const numParts = Math.ceil(totalPages / PAGES_PER_PART);
+
+      // Build page ranges dynamically
+      const pageParts = [];
+      for (let i = 0; i < numParts; i++) {
+        const start = i * PAGES_PER_PART;
+        const end = Math.min(start + PAGES_PER_PART - 1, totalPages - 1);
+        pageParts.push([start, end]);
+      }
+
+      setStep([
+        {status:'step-done',icon:'check',label:`PDF lido — ${totalPages} páginas`},
+        {status:'step-active',icon:'cut',label:`Dividindo em ${numParts} partes de ~${PAGES_PER_PART} páginas...`},
+        {status:'step-wait',icon:'robot',label:'Aguardando análise'}
       ]);
 
-      const parts = [p1, p2, p3];
+      // Split all parts
+      const parts = await Promise.all(pageParts.map(([s,e]) => splitPdfBrowser(b64, s, e)));
       let allImoveis = [];
 
       for (let i = 0; i < parts.length; i++) {
+        const [ps, pe] = pageParts[i];
         setStep([
-          {status:'step-done',icon:'check',label:'PDF dividido em 3 partes'},
-          {status:'step-active',icon:'robot',label:`Analisando parte ${i+1} de 3...`},
+          {status:'step-done',icon:'check',label:`PDF dividido em ${numParts} partes`},
+          {status:'step-active',icon:'robot',label:`Analisando parte ${i+1} de ${numParts} (págs ${ps+1}–${pe+1})...`},
           {status:'step-wait',icon:'database',label:`${allImoveis.length} imóveis encontrados até agora`}
         ]);
 
-        const resp = await fetch('/api/analyze-edital', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({pdfBase64: parts[i], mode:'bulk'})
-        });
-        const data = await resp.json();
-
-        if (!resp.ok || data.error) {
-          setStep([{status:'',icon:'alert-circle',label:`Erro na parte ${i+1}: ${data.error||'Falha'}`, style:'color:var(--red)'}]);
-          return;
+        let data;
+        try {
+          const resp = await fetch('/api/analyze-edital', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({pdfBase64: parts[i], mode:'bulk'})
+          });
+          const text = await resp.text();
+          try { data = JSON.parse(text); }
+          catch(e) { data = { error: 'Timeout — tente novamente' }; }
+        } catch(e) {
+          data = { error: e.message };
         }
 
-        if (data.imoveis?.length) allImoveis = allImoveis.concat(data.imoveis);
+        if (data?.error) {
+          console.warn(`Parte ${i+1} erro: ${data.error}`);
+        } else if (data?.imoveis?.length) {
+          allImoveis = allImoveis.concat(data.imoveis);
+        }
 
-        // Small delay between parts
-        if (i < parts.length - 1) await new Promise(r => setTimeout(r, 1500));
+        if (i < parts.length - 1) await new Promise(r => setTimeout(r, 500));
       }
 
       if (!allImoveis.length) {
